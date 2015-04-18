@@ -116,6 +116,22 @@ case class SpaceRegion[A](val lb: Array[Option[A]], val ub: Array[Option[A]])(im
     !dontcontains(region)
   }
 
+  def contains(dim: Int, coordinate: A): Boolean = {
+    (lb(dim).isEmpty || ord.lteq(lb(dim).get, coordinate)) && (ub(dim).isEmpty || ord.lteq(coordinate, ub(dim).get))
+  }
+
+  def leftcontains(dim: Int, coordinate: A): Boolean = {
+    (lb(dim).isEmpty || ord.lteq(lb(dim).get, coordinate))
+  }
+
+  def rightcontains(dim: Int, coordinate: A): Boolean = {
+    (ub(dim).isEmpty || ord.lteq(coordinate, ub(dim).get))
+  }
+
+  def sidecontains(dim: Int, coordinate: A): Boolean = {
+    (!ub(dim).isEmpty && ord.lteq(ub(dim).get, coordinate))
+  }
+
   override def clone = {
     SpaceRegion(lb.clone, ub.clone)
   }

@@ -4,7 +4,7 @@ abstract class D1Tree[A](val value: A)(implicit ord: Ordering[A]) {
 
   def findSplitNode(lb: A, ub: A): D1Tree[A]
 
-  def reportSubTree: Set[A]
+  def reportSubtree: Set[A]
 
   def d1RangeQuery(lb: A, ub: A): Set[A] = {
     val splitNode = this.findSplitNode(lb, ub)
@@ -31,8 +31,8 @@ case class D1Node[A](valueNode: A, val left: D1Tree[A], val right: D1Tree[A])(im
     }
   }
 
-  def reportSubTree: Set[A] = {
-    left.reportSubTree ++ right.reportSubTree
+  def reportSubtree: Set[A] = {
+    left.reportSubtree ++ right.reportSubtree
   }
 
   def d1RangeQueryFromSplitNode(lb: A, ub: A): Set[A] = {
@@ -41,14 +41,14 @@ case class D1Node[A](valueNode: A, val left: D1Tree[A], val right: D1Tree[A])(im
 
   def d1RangeQueryFromSplitNodeLeft(lb: A): Set[A] = {
     if (ord.lteq(lb, value)) // lb <= value
-      right.reportSubTree ++ left.d1RangeQueryFromSplitNodeLeft(lb)
+      right.reportSubtree ++ left.d1RangeQueryFromSplitNodeLeft(lb)
     else
       right.d1RangeQueryFromSplitNodeLeft(lb)
   }
 
   def d1RangeQueryFromSplitNodeRight(ub: A): Set[A] = {
     if (ord.lteq(value, ub)) // value <= ub
-      left.reportSubTree ++ right.d1RangeQueryFromSplitNodeRight(ub)
+      left.reportSubtree ++ right.d1RangeQueryFromSplitNodeRight(ub)
     else
       left.d1RangeQueryFromSplitNodeRight(ub)
   }
@@ -61,7 +61,7 @@ case class D1Leaf[A](valueLeaf: A)(implicit ord: Ordering[A]) extends D1Tree[A](
 
   def findSplitNode(lb: A, ub: A): D1Tree[A] = this
 
-  def reportSubTree: Set[A] = Set(value)
+  def reportSubtree: Set[A] = Set(value)
 
   def d1RangeQueryFromSplitNode(lb: A, ub: A): Set[A] = {
     if (ord.lteq(lb, value) && ord.lteq(value, ub)) // lb <= value && value <= ub
@@ -95,8 +95,8 @@ object test extends App {
   val tree = D1Node(10, tree1, tree2)
 
   println(tree1.d1RangeQueryFromSplitNodeRight(11))
-  println(tree1.reportSubTree)
-  println(tree2.reportSubTree)
+  println(tree1.reportSubtree)
+  println(tree2.reportSubtree)
   println(tree.findSplitNode(5, 22))
   println(tree.d1RangeQueryFromSplitNodeLeft(5))
   println(tree.d1RangeQueryFromSplitNodeRight(22))
