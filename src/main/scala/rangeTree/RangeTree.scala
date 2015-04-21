@@ -2,6 +2,9 @@ package rangeTree
 
 import kdTrees._
 
+/**
+ *  Abstract class defining the methods used for a rangeTree
+ */
 abstract class RangeTree[A](val value: Point[A], val associatedTree: Option[RangeTree[A]], val depth: Int)(implicit ord: Ordering[A]) {
 
   def reportSubtree: Set[Point[A]]
@@ -16,14 +19,31 @@ abstract class RangeTree[A](val value: Point[A], val associatedTree: Option[Rang
   def rangeQueryFromSplitNode(region: SpaceRegion[A]): Set[Point[A]]
   def rangeQueryFromSplitNodeLeft(region: SpaceRegion[A]): Set[Point[A]]
   def rangeQueryFromSplitNodeRight(region: SpaceRegion[A]): Set[Point[A]]
+
+  def getLeftTree(): RangeTree[A]
+  def getRightTree(): RangeTree[A]
+  def getAssoTree(): Option[RangeTree[A]]
 }
 
+/**
+ * Object that will be used to build the RangeTree
+ */
 object RangeTree {
+  /**
+   * Constructor od the RangeTree
+   * In : a set of Points and a Dimention
+   * Out : the corresponding rangeTree
+   */
   def apply[A](data: Set[Point[A]], dim: Int)(implicit ord: Ordering[A]): RangeTree[A] = {
     val sortedPoints = List.tabulate(dim)(d => data.toArray.sortBy(p => (p.coord(d), p.id)))
     this.buildRangeTree(sortedPoints, 0, dim)
   }
 
+  /**
+   * Method used to build the rangeTree from a sorted set of points
+   * In : list of sorted points, a depth (dimension corresponding to the rangeTree) and the total number of dimensions
+   * Out : The rangeTree corresponding
+   */
   def buildRangeTree[A](sortedPoints: List[Array[Point[A]]], depth: Int, dim: Int)(implicit ord: Ordering[A]): RangeTree[A] = {
     val associatedTree = if (depth == dim - 1)
       None
@@ -43,6 +63,9 @@ object RangeTree {
   }
 }
 
+/**
+ * Class representing an internal node of a rangeTree
+ */
 case class RangeNode[A](valueNode: Point[A], assoTree: Option[RangeTree[A]], depthNode: Int, val left: RangeTree[A], val right: RangeTree[A])(implicit ord: Ordering[A]) extends RangeTree[A](valueNode, assoTree, depthNode) {
 
   def reportSubtree: Set[Point[A]] = {
@@ -86,8 +109,17 @@ case class RangeNode[A](valueNode: Point[A], assoTree: Option[RangeTree[A]], dep
       left.rangeQueryFromSplitNodeRight(region)
     }
   }
+
+  def getLeftTree(): RangeTree[A] = left
+
+  def getRightTree(): RangeTree[A] = right
+
+  def getAssoTree(): Option[RangeTree[A]] = assoTree
 }
 
+/**
+ * Class representing an leaf of a rangeTree
+ */
 case class RangeLeaf[A](valueLeaf: Point[A], assoTree: Option[RangeTree[A]], depthLeaf: Int)(implicit ord: Ordering[A]) extends RangeTree[A](valueLeaf, assoTree, depthLeaf) {
 
   def reportSubtree: Set[Point[A]] = {
@@ -119,6 +151,12 @@ case class RangeLeaf[A](valueLeaf: Point[A], assoTree: Option[RangeTree[A]], dep
       Set()
     }
   }
+
+  def getLeftTree(): RangeTree[A] = null
+
+  def getRightTree(): RangeTree[A] = null
+
+  def getAssoTree(): Option[RangeTree[A]] = assoTree
 }
 
 object testt extends App {
@@ -129,4 +167,3 @@ object testt extends App {
   println(tree.rangeQuery(SpaceRegion(Array(Some(1), Some(2)), Array(Some(5), Some(5)))))
 
 }
-
