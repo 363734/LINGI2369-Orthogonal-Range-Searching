@@ -39,9 +39,9 @@ object Reader extends App {
   val points = Data._2.zip(Data._3).map(x => Array(x._1, x._2)).zipWithIndex.map(x => Point(x._2, x._1))
 
   val kdTree = KdTree(points.toSet, 2)
-  println(kdTree.value)
+
   val rangeTree = RangeTree(points.toSet, 2)
 
-  println(kdTree.searchKD(SpaceRegion(Array(Some(1850), Some(0)), Array(Some(1950), Some(500)))))
-  println(rangeTree.rangeQuery(SpaceRegion(Array(Some(1900), Some(0)), Array(Some(1950), Some(500)))))
+  println(kdTree.searchKD(SpaceRegion(Array(Some(1850), Some(0)), Array(Some(1900), Some(500)))))
+  println(rangeTree.rangeQuery(SpaceRegion(Array(Some(1850), Some(0)), Array(Some(1900), Some(500)))))
 }

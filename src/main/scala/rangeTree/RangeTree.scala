@@ -100,7 +100,7 @@ case class RangeNode[A](valueNode: Point[A], assoTree: Option[RangeTree[A]], dep
   }
 
   def rangeQueryFromSplitNodeRight(region: SpaceRegion[A]): Set[Point[A]] = {
-    if (region.leftcontains(depth, value.coord(depth))) {
+    if (region.rightcontains(depth, value.coord(depth))) {
       (if (associatedTree.isEmpty)
         left.reportSubtree
       else

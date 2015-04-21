@@ -7,7 +7,7 @@ abstract class KdTree[A](val value: Point[A], val region: SpaceRegion[A])(implic
 
   def searchKD(range: SpaceRegion[A]): Set[Point[A]]
   def reportSubtree: Set[Point[A]]
-  
+
   def getLeftTree(): KdTree[A]
   def getRightTree(): KdTree[A]
 }
@@ -77,11 +77,11 @@ case class KdNode[A](valueNode: Point[A], regionNode: SpaceRegion[A], val dimNod
     })
     leftReported ++ rightReported
   }
-  
+
   def getLeftTree(): KdTree[A] = left
-  
+
   def getRightTree(): KdTree[A] = right
-  
+
 }
 
 /**
@@ -99,11 +99,11 @@ case class KdLeaf[A](valueNode: Point[A], regionLeaf: SpaceRegion[A])(implicit o
     else
       Set()
   }
-  
+
   def getLeftTree(): KdTree[A] = null
-  
+
   def getRightTree(): KdTree[A] = null
-  
+
 }
 
 /**
@@ -112,7 +112,7 @@ case class KdLeaf[A](valueNode: Point[A], regionLeaf: SpaceRegion[A])(implicit o
  */
 case class Point[A](val id: Int, val coordinate: Array[A])(implicit ord: Ordering[A]) {
   val dim = coordinate.length
-  
+
   /**
    * Returns one of the coordinate of the point (x, y, z...)
    */
