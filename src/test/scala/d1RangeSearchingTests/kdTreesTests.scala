@@ -1,0 +1,40 @@
+package d1RangeSearchingTests
+import org.scalatest._
+import kdTrees._
+
+class kdTreesTests  extends FlatSpec {
+
+  
+  // Points are : [3;5], [10;20], [19;70], [25;93], [33 :17], [41;63], [55,14], [62;59], [83;47], [91;73]
+  val points = Array(3, 10, 19, 25, 33, 41, 55, 62, 83, 91).zip(Array(5, 20, 70, 93, 17, 63, 14, 59, 47, 73)).map(x => Array(x._1, x._2)).zipWithIndex.map(x => Point(x._2, x._1))
+  println(points.mkString(","))
+  println(points(0))
+  
+  "The points " should " all be correctly created." in {
+    assert(points(0).coord(0) == 3)
+    assert(points(0).coord(1) == 5)
+    assert(points(1).coord(0) == 10)
+    assert(points(1).coord(1) == 20)
+    assert(points(2).coord(0) == 19)
+    assert(points(2).coord(1) == 70)
+    assert(points(3).coord(0) == 25)
+    assert(points(3).coord(1) == 93)
+    assert(points.size == 10)
+  }
+  
+  // Builds the tree of dimension 2 corresponding to the points
+  val tree = KdTree(points.toSet, 2)
+  "The kdTree " should " be correctly build." in {
+     assert(tree.value.coord(0) == 33)
+     assert(tree.value.coord(1) == 17)
+     val rightTree = tree.getRightTree()
+     val leftTree = tree.getLeftTree()
+     assert(leftTree.value.coord(0) == 10)
+     assert(leftTree.value.coord(1) == 20)
+     assert(rightTree.value.coord(0) == 62)
+     assert(rightTree.value.coord(1) == 59)
+     
+  }
+  println(tree.searchKD(SpaceRegion(Array(Some(1), Some(2)), Array(Some(5), Some(5)))))
+  
+}

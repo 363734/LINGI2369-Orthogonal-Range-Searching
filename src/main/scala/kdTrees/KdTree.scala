@@ -1,18 +1,37 @@
 package kdTrees
 
+/**
+ * Abstract class defining the methods used for a KdTree
+ */
 abstract class KdTree[A](val value: Point[A], val region: SpaceRegion[A])(implicit ord: Ordering[A]) {
 
   def searchKD(range: SpaceRegion[A]): Set[Point[A]]
   def reportSubtree: Set[Point[A]]
+  
+  def getLeftTree(): KdTree[A]
+  def getRightTree(): KdTree[A]
 }
 
+/**
+ * Object KdTree on which the methods will be used
+ */
 object KdTree {
+  /**
+   * Constructor of the KdTree : sorts the points and make the tree out of them
+   * In : Points in the search space
+   * Out : KdTree corresponding
+   */
   def apply[A](data: Set[Point[A]], dim: Int)(implicit ord: Ordering[A]): KdTree[A] = {
     // TODO: check all points have dimention dim and unique id
     val sortedPoints = Array.tabulate(dim)(d => data.toArray.sortBy(p => (p.coord(d), p.id)))
     this.buildKdTree(sortedPoints, 0, FullSpace(dim))
   }
 
+  /**
+   * Method used to build a KdTree from a set of points
+   * In : sorted points, current depth in the tree and search space
+   * Out : sub KdTree
+   */
   private def buildKdTree[A](sortedPoints: Array[Array[Point[A]]], depth: Int, region: SpaceRegion[A])(implicit ord: Ordering[A]): KdTree[A] = {
     if (sortedPoints(0).length == 1) {
       KdLeaf(sortedPoints(0)(0), sortedPoints(0)(0).getRegion)
@@ -30,6 +49,9 @@ object KdTree {
 
 }
 
+/**
+ * Class representing an internal node of a KdTree
+ */
 case class KdNode[A](valueNode: Point[A], regionNode: SpaceRegion[A], val dimNode: Int, val left: KdTree[A], val right: KdTree[A])(implicit ord: Ordering[A]) extends KdTree[A](valueNode, regionNode) {
 
   def reportSubtree: Set[Point[A]] = {
@@ -55,8 +77,16 @@ case class KdNode[A](valueNode: Point[A], regionNode: SpaceRegion[A], val dimNod
     })
     leftReported ++ rightReported
   }
+  
+  def getLeftTree(): KdTree[A] = left
+  
+  def getRightTree(): KdTree[A] = right
+  
 }
 
+/**
+ * Class representing a leaf of a KdTree
+ */
 case class KdLeaf[A](valueNode: Point[A], regionLeaf: SpaceRegion[A])(implicit ord: Ordering[A]) extends KdTree[A](valueNode, regionLeaf) {
 
   def reportSubtree: Set[Point[A]] = {
@@ -69,10 +99,23 @@ case class KdLeaf[A](valueNode: Point[A], regionLeaf: SpaceRegion[A])(implicit o
     else
       Set()
   }
+  
+  def getLeftTree(): KdTree[A] = null
+  
+  def getRightTree(): KdTree[A] = null
+  
 }
 
+/**
+ * Class representing a point in the search space
+ * In : point ID and coordinates (x,y,...)
+ */
 case class Point[A](val id: Int, val coordinate: Array[A])(implicit ord: Ordering[A]) {
   val dim = coordinate.length
+  
+  /**
+   * Returns one of the coordinate of the point (x, y, z...)
+   */
   def coord(dim: Int) = { // dim from 1 to this.dim
     coordinate(dim)
   }
@@ -85,6 +128,10 @@ case class Point[A](val id: Int, val coordinate: Array[A])(implicit ord: Orderin
   }
 }
 
+/**
+ * Class representing the search space given to a search on the tree
+ * In : lower bounds and upper bounds (ex: (0,0,0) (2,2,2) for the cube bound to this points)
+ */
 case class SpaceRegion[A](val lb: Array[Option[A]], val ub: Array[Option[A]])(implicit ord: Ordering[A]) {
 
   //TODO : check the tree are build right.. what in case of search space with a same bound?
@@ -144,6 +191,9 @@ case class SpaceRegion[A](val lb: Array[Option[A]], val ub: Array[Option[A]])(im
     (left, right)
   }
 }
+/**
+ * Object building the full space of the right number of dimensions
+ */
 object FullSpace {
   def apply[A](dim: Int)(implicit ord: Ordering[A]): SpaceRegion[A] = {
     val none: Option[A] = None
