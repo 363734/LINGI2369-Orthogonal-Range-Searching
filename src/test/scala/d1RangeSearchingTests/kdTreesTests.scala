@@ -36,9 +36,12 @@ class kdTreesTests extends FlatSpec {
   // Tests on the search results
   "The search " should " return (only) the points in the search space." in {
     var searchSet = tree.searchKD(SpaceRegion(Array(Some(40), Some(10)), Array(Some(70), Some(60))))
-    
+
     assert(searchSet.size == 2)
-    assert(searchSet.toString().equals("Set((55,14), (62,59))"))
+    //    assert(searchSet.toString().equals("Set((55,14), (62,59))"))
+    assert(searchSet.contains(points(6)))
+    assert(searchSet.contains(points(7)))
+    assert(!searchSet.contains(points(0)))
 
     searchSet = tree.searchKD(SpaceRegion(Array(Some(0), Some(0)), Array(Some(1000), Some(1000))))
     assert(searchSet.size == 10)

@@ -58,8 +58,34 @@ class rangeTreeTests extends FlatSpec {
     var searchSet = tree.rangeQuery(SpaceRegion(Array(Some(40), Some(10)), Array(Some(70), Some(60))))
 
     assert(searchSet.size == 2)
-    println(searchSet.toString())
-    //    assert(searchSet.toString().equals("Set((55,14), (62,59))"))
+    assert(searchSet.contains(points(6)))
+    assert(searchSet.contains(points(7)))
+    assert(!searchSet.contains(points(0)))
+    //    println(searchSet.toString())
+    //    assert(searchSet.toString().equals("Set((55,14), (62,59))")
+    searchSet = tree.rangeQuery(SpaceRegion(Array(Some(55), Some(14)), Array(Some(62), Some(59))))
+    assert(searchSet.size == 2)
+
+    searchSet = tree.rangeQuery(SpaceRegion(Array(Some(56), Some(14)), Array(Some(62), Some(59))))
+    assert(searchSet.size == 1)
+
+    searchSet = tree.rangeQuery(SpaceRegion(Array(Some(55), Some(15)), Array(Some(62), Some(59))))
+    assert(searchSet.size == 1)
+
+    searchSet = tree.rangeQuery(SpaceRegion(Array(Some(55), Some(14)), Array(Some(61), Some(59))))
+    assert(searchSet.size == 1)
+
+    searchSet = tree.rangeQuery(SpaceRegion(Array(Some(55), Some(14)), Array(Some(62), Some(58))))
+    assert(searchSet.size == 1)
+
+    searchSet = tree.rangeQuery(SpaceRegion(Array(Some(0), Some(0)), Array(Some(1000), Some(1000))))
+    assert(searchSet.size == 10)
+
+    searchSet = tree.rangeQuery(SpaceRegion(Array(Some(0), Some(0)), Array(Some(1), Some(1))))
+    assert(searchSet.size == 0)
+
+    searchSet = tree.rangeQuery(SpaceRegion(Array(Some(1000), Some(500)), Array(Some(1001), Some(5001))))
+    assert(searchSet.size == 0)
   }
 
 }
