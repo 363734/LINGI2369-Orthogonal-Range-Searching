@@ -58,9 +58,35 @@ class kdTreesTests extends FlatSpec {
     boundTest(10, 58, 23, 69)
     boundTest(0, 0, 10, 50)
   }
+  // Testing on Strings and 3D points
+  val points3DStrings = Array("tree", "coffee", "door", "window", "linux", "penguin", "table", "chair", "strong", "bucket")
+    .zip(Array("j", "km", "ml", "jlj", "okm", "jkl", "pm", "pjklj", "pmkfcf", "ppp"))
+    .zip(Array("apple", "peach", "banana", "strawberry", "pear", "pineapple", "coconut", "raspberry", "cherry", "kiwi"))
+    .map(x => Array(x._1._1, x._1._2, x._2)).zipWithIndex.map(x => Point(x._2, x._1))
+
+  // Builds the tree of dimension 3 corresponding to the points
+  val treeString = KdTree(points3DStrings.toSet, 3)
+
+  "The search (3D on Strings) " should " not contain results out of the bounds." in {
+    assert(treeString.searchKD(SpaceRegion(Array(Some("a"), Some("a"), Some("a")), Array(Some("p"), Some("p"), Some("p")))).size == 1)
+    assert(treeString.searchKD(SpaceRegion(Array(Some("a"), Some("a"), Some("a")), Array(Some("q"), Some("q"), Some("q")))).size == 5)
+
+    boundTest3DString("a", "a", "a", "z", "z", "z")
+    boundTest3DString("c", "c", "e", "q", "t", "e")
+  }
 
   def boundTest(lbx: Int, lby: Int, ubx: Int, uby: Int) = {
     var searchSet = tree.searchKD(SpaceRegion(Array(Some(lbx), Some(lby)), Array(Some(ubx), Some(uby))))
+
+    var searchPoints = searchSet.toList
+    for (i <- 0 until searchPoints.size) {
+      assert(searchPoints(i).coord(0) <= ubx && searchPoints(i).coord(1) <= uby)
+      assert(searchPoints(i).coord(0) >= lbx && searchPoints(i).coord(1) >= lby)
+    }
+  }
+
+  def boundTest3DString(lbx: String, lby: String, lbz: String, ubx: String, uby: String, ubz: String) = {
+    var searchSet = treeString.searchKD(SpaceRegion(Array(Some(lbx), Some(lby), Some(lbz)), Array(Some(ubx), Some(uby), Some(ubz))))
 
     var searchPoints = searchSet.toList
     for (i <- 0 until searchPoints.size) {
