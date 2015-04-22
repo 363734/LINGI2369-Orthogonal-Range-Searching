@@ -163,18 +163,31 @@ case class SpaceRegion[A](val lb: Array[Option[A]], val ub: Array[Option[A]])(im
     !dontcontains(region)
   }
 
+  /**
+   * Checks if a value is between the lower and upper bound
+   */
   def contains(dim: Int, coordinate: A): Boolean = {
-    (lb(dim).isEmpty || ord.lteq(lb(dim).get, coordinate)) && (ub(dim).isEmpty || ord.lteq(coordinate, ub(dim).get))
+    //    (lb(dim).isEmpty || ord.lteq(lb(dim).get, coordinate)) && (ub(dim).isEmpty || ord.lteq(coordinate, ub(dim).get))
+    (leftcontains(dim, coordinate) && rightcontains(dim, coordinate))
   }
 
+  /**
+   * Checks if the current value is bigger than the lowerBound at this dimensions
+   */
   def leftcontains(dim: Int, coordinate: A): Boolean = {
     (lb(dim).isEmpty || ord.lteq(lb(dim).get, coordinate))
   }
 
+  /**
+   * Checks if the current value is lower than the upperBound at this dimensions
+   */
   def rightcontains(dim: Int, coordinate: A): Boolean = {
     (ub(dim).isEmpty || ord.lteq(coordinate, ub(dim).get))
   }
 
+  /**
+   * Checks if a value is not in the searchSpace ?
+   */
   def sidecontains(dim: Int, coordinate: A): Boolean = {
     (!ub(dim).isEmpty && ord.lteq(ub(dim).get, coordinate))
   }

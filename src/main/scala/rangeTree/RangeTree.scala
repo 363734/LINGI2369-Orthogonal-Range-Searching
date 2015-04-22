@@ -95,7 +95,7 @@ case class RangeNode[A](valueNode: Point[A], assoTree: Option[RangeTree[A]], dep
       else
         associatedTree.get.rangeQuery(region)) ++ left.rangeQueryFromSplitNodeLeft(region)
     } else {
-      right.rangeQueryFromSplitNodeLeft(region)
+      right.rangeQueryFromSplitNodeLeft(region) ++ left.rangeQueryFromSplitNodeLeft(region)
     }
   }
 
@@ -106,7 +106,7 @@ case class RangeNode[A](valueNode: Point[A], assoTree: Option[RangeTree[A]], dep
       else
         associatedTree.get.rangeQuery(region)) ++ right.rangeQueryFromSplitNodeRight(region)
     } else {
-      left.rangeQueryFromSplitNodeRight(region)
+      left.rangeQueryFromSplitNodeRight(region) ++ right.rangeQueryFromSplitNodeRight(region)
     }
   }
 
