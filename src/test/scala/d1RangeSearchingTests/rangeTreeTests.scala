@@ -103,10 +103,12 @@ class rangeTreeTests extends FlatSpec {
   // Builds the tree of dimension 3 corresponding to the points
   val treeString = RangeTree(points3DStrings.toSet, 3)
 
-  "The search (3D on Strings) " should " not contain results out of the bounds." in {
+  "The search (3D on Strings) " should " contain all the results in the bounds." in {
     assert(treeString.rangeQuery(SpaceRegion(Array(Some("a"), Some("a"), Some("a")), Array(Some("p"), Some("p"), Some("p")))).size == 1)
     assert(treeString.rangeQuery(SpaceRegion(Array(Some("a"), Some("a"), Some("a")), Array(Some("q"), Some("q"), Some("q")))).size == 5)
+  }
 
+  "The search (3D on Strings) " should " not contain results out of the bounds." in {
     boundTest3DString("a", "a", "a", "z", "z", "z")
     boundTest3DString("c", "c", "e", "q", "t", "e")
   }
