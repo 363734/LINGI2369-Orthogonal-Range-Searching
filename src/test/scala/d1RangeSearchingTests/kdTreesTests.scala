@@ -53,4 +53,20 @@ class kdTreesTests extends FlatSpec {
     assert(searchSet.size == 0)
   }
 
+  "The search " should " not contain results out of the bounds." in {
+    boundTest(40, 10, 70, 60)
+    boundTest(10, 58, 23, 69)
+    boundTest(0, 0, 10, 50)
+  }
+
+  def boundTest(lbx: Int, lby: Int, ubx: Int, uby: Int) = {
+    var searchSet = tree.searchKD(SpaceRegion(Array(Some(lbx), Some(lby)), Array(Some(ubx), Some(uby))))
+
+    var searchPoints = searchSet.toList
+    for (i <- 0 until searchPoints.size) {
+      assert(searchPoints(i).coord(0) <= ubx && searchPoints(i).coord(1) <= uby)
+      assert(searchPoints(i).coord(0) >= lbx && searchPoints(i).coord(1) >= lby)
+    }
+  }
+
 }
