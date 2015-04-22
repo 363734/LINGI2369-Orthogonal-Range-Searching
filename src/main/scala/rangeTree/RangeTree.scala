@@ -57,8 +57,8 @@ object RangeTree {
       val pivot = sortedPoints(0)(sublength)
       val pivotCode = (pivot.coord(depth), pivot.id)
 
-      val leftSortedPoints = sortedPoints.map(data => data.filter(d => ord.lteq(d.coord(depth), pivotCode._1) || ((ord.eq(d.coord(depth), pivotCode._1) && d.id <= pivotCode._2))))
-      val rightSortedPoints = sortedPoints.map(data => data.filter(d => !(ord.lteq(d.coord(depth), pivotCode._1) || ((ord.eq(d.coord(depth), pivotCode._1) && d.id <= pivotCode._2)))))
+      val leftSortedPoints = sortedPoints.map(data => data.filter(d => ord.lt(d.coord(depth), pivotCode._1) || ((ord.equiv(d.coord(depth), pivotCode._1) && d.id <= pivotCode._2))))
+      val rightSortedPoints = sortedPoints.map(data => data.filter(d => !((ord.lt(d.coord(depth), pivotCode._1) || ((ord.equiv(d.coord(depth), pivotCode._1) && d.id <= pivotCode._2))))))
       RangeNode(pivot, associatedTree, depth, RangeTree.buildRangeTree(leftSortedPoints, depth, dim), RangeTree.buildRangeTree(rightSortedPoints, depth, dim))
     }
   }
