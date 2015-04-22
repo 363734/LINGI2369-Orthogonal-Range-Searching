@@ -56,8 +56,9 @@ object RangeTree {
       val sublength = (sortedPoints(0).length - 1) / 2
       val pivot = sortedPoints(0)(sublength)
       val pivotCode = (pivot.coord(depth), pivot.id)
-      val leftSortedPoints = sortedPoints.map(data => data.filter(d => ord.lteq(d.coord(depth), pivotCode._1) && (d.id <= pivotCode._2)))
-      val rightSortedPoints = sortedPoints.map(data => data.filter(d => !(ord.lteq(d.coord(depth), pivotCode._1) && (d.id <= pivotCode._2))))
+
+      val leftSortedPoints = sortedPoints.map(data => data.filter(d => ord.lteq(d.coord(depth), pivotCode._1) || ((ord.eq(d.coord(depth), pivotCode._1) && d.id <= pivotCode._2))))
+      val rightSortedPoints = sortedPoints.map(data => data.filter(d => !(ord.lteq(d.coord(depth), pivotCode._1) || ((ord.eq(d.coord(depth), pivotCode._1) && d.id <= pivotCode._2)))))
       RangeNode(pivot, associatedTree, depth, RangeTree.buildRangeTree(leftSortedPoints, depth, dim), RangeTree.buildRangeTree(rightSortedPoints, depth, dim))
     }
   }
@@ -95,7 +96,7 @@ case class RangeNode[A](valueNode: Point[A], assoTree: Option[RangeTree[A]], dep
       else
         associatedTree.get.rangeQuery(region)) ++ left.rangeQueryFromSplitNodeLeft(region)
     } else {
-      right.rangeQueryFromSplitNodeLeft(region) ++ left.rangeQueryFromSplitNodeLeft(region)
+      right.rangeQueryFromSplitNodeLeft(region)
     }
   }
 
@@ -106,7 +107,7 @@ case class RangeNode[A](valueNode: Point[A], assoTree: Option[RangeTree[A]], dep
       else
         associatedTree.get.rangeQuery(region)) ++ right.rangeQueryFromSplitNodeRight(region)
     } else {
-      left.rangeQueryFromSplitNodeRight(region) ++ right.rangeQueryFromSplitNodeRight(region)
+      left.rangeQueryFromSplitNodeRight(region)
     }
   }
 

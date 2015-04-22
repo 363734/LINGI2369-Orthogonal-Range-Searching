@@ -39,8 +39,8 @@ object KdTree {
       val sublength = (sortedPoints(0).length - 1) / 2
       val pivot = sortedPoints(depth)(sublength)
       val pivotCode = (pivot.coord(depth), pivot.id)
-      val leftSortedPoints = sortedPoints.map(data => data.filter(d => ord.lteq(d.coord(depth), pivotCode._1) && (d.id <= pivotCode._2)))
-      val rightSortedPoints = sortedPoints.map(data => data.filter(d => !(ord.lteq(d.coord(depth), pivotCode._1) && (d.id <= pivotCode._2))))
+      val leftSortedPoints = sortedPoints.map(data => data.filter(d => ord.lteq(d.coord(depth), pivotCode._1) || ((ord.eq(d.coord(depth), pivotCode._1) && d.id <= pivotCode._2))))
+      val rightSortedPoints = sortedPoints.map(data => data.filter(d => !(ord.lteq(d.coord(depth), pivotCode._1) || ((ord.eq(d.coord(depth), pivotCode._1) && d.id <= pivotCode._2)))))
       val newdepth = (depth + 1) % sortedPoints.length
       val (leftRegion, rightRegion) = region.shrink(depth, pivotCode._1)
       KdNode(pivot, region, depth, KdTree.buildKdTree(leftSortedPoints, newdepth, leftRegion), KdTree.buildKdTree(rightSortedPoints, newdepth, rightRegion))
