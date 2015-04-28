@@ -119,10 +119,19 @@ case class Point[A](val id: Int, val coordinate: Array[A])(implicit ord: Orderin
   def coord(dim: Int) = { // dim from 1 to this.dim
     coordinate(dim)
   }
+
   def getRegion: SpaceRegion[A] = {
     val coordinateO: Array[Option[A]] = coordinate.map(Some(_))
     SpaceRegion(coordinateO, coordinateO)
   }
+
+  def <=(p: Point[A], d: Int): Boolean = {
+    (ord.lt(this.coord(d), p.coord(d))) || (ord.equiv(this.coord(d), p.coord(d)) && this.id <= p.id)
+  }
+  def >=(p: A, d: Int): Boolean = {
+    (ord.gteq(this.coord(d), p))
+  }
+
   override def toString: String = {
     "(" + coordinate.mkString(",") + ")"
   }
