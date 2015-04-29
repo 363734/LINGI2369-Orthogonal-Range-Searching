@@ -1,12 +1,14 @@
 package d1RangeSearchingTests
 import org.scalatest._
+import d1RangeSearching._
 
 class D1TreeTests extends FlatSpec {
   // Values for integer testing
-  val bigList = List(3, 10, 19, 23, 30, 37, 49, 59, 62, 70, 80, 89, 100, 105)
-  val bigTree = new d1RangeSearching.D1Root().makeNode(bigList)
-  val oneNodeTree = new d1RangeSearching.D1Root().makeNode(List(1))
+  val bigList = Set(3, 10, 19, 23, 30, 37, 49, 59, 62, 70, 80, 89, 100, 105)
+  val bigTree = D1Tree(bigList)
+  val oneNodeTree = D1Tree(Set(10))
 
+  // Get the different subtrees
   var subTree1 = bigTree.getLeftTree()
   var subTree11 = subTree1.getLeftTree()
   var subTree111 = subTree11.getLeftTree()
@@ -14,11 +16,12 @@ class D1TreeTests extends FlatSpec {
 
   var belowSubTree111 = subTree111.reportSubtree
 
+  // Performs the request on the tree
   var request = bigTree.d1RangeQuery(15, 65)
 
   // Values for String testing
-  val stringList = List("b", "z", "a", "d", "k")
-  val stringTree = new d1RangeSearching.D1Root().makeNode(stringList)
+  val stringList = Set("b", "z", "a", "d", "k")
+  val stringTree = D1Tree(stringList)
   val stringRequest = stringTree.d1RangeQuery("c", "l")
 
   // Integer testing
@@ -42,7 +45,7 @@ class D1TreeTests extends FlatSpec {
     assert(subTree1111.getRightTree() == null)
   }
 
-  "The requests" should "be correctly done" in {
+  "The requests results " should "be the correct ones" in {
     assert(request.size == 7)
     assert(request.contains(19))
     assert(request.contains(23))
@@ -73,7 +76,7 @@ class D1TreeTests extends FlatSpec {
     assert(bigTree.findSplitNode(150, 188).value == 105)
   }
 
-  "A tree with onlu one node" should "be only the root" in {
+  "A tree with only one node" should "be only the root" in {
     assert(oneNodeTree.getLeftTree() == null)
     assert(oneNodeTree.getRightTree() == null)
   }
