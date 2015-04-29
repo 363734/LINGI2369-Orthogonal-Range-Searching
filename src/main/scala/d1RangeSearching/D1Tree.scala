@@ -163,6 +163,9 @@ object D1Tree {
   }
 }
 
+/**
+ * Obsolete object used for some tests
+ */
 object test extends App {
 
   val tree1 = D1Node(3, D1Leaf(3), D1Leaf(10))
