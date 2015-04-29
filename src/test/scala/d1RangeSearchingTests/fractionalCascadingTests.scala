@@ -77,16 +77,16 @@ class fractionalCascadingTests extends FlatSpec {
     .map(x => Array(x._1._1, x._1._2, x._2)).zipWithIndex.map(x => Point(x._2, x._1))
 
   // Builds the tree of dimension 3 corresponding to the points
-  //  val treeString = FractionnalTree(points3DStrings.toSet, 3)
+  val treeString = FractionnalTree(points3DStrings.toSet, 3)
 
   "The search (3D on Strings) " should " contain all the results in the bounds." in {
-    //    assert(treeString.query(SpaceRegion(Array(Some("a"), Some("a"), Some("a")), Array(Some("p"), Some("p"), Some("p")))).size == 1)
-    //    assert(treeString.query(SpaceRegion(Array(Some("a"), Some("a"), Some("a")), Array(Some("q"), Some("q"), Some("q")))).size == 5)
+    assert(treeString.query(SpaceRegion(Array(Some("a"), Some("a"), Some("a")), Array(Some("p"), Some("p"), Some("p")))).size == 1)
+    assert(treeString.query(SpaceRegion(Array(Some("a"), Some("a"), Some("a")), Array(Some("q"), Some("q"), Some("q")))).size == 5)
   }
 
   "The search (3D on Strings) " should " not contain results out of the bounds." in {
-    //    boundTest3DString("a", "a", "a", "z", "z", "z")
-    //    boundTest3DString("c", "c", "e", "q", "t", "e")
+    boundTest3DString("a", "a", "a", "z", "z", "z")
+    boundTest3DString("c", "c", "e", "q", "t", "e")
   }
 
   def boundTest(lbx: Int, lby: Int, ubx: Int, uby: Int) = {
@@ -98,14 +98,14 @@ class fractionalCascadingTests extends FlatSpec {
       assert(searchPoints(i).coord(0) >= lbx && searchPoints(i).coord(1) >= lby)
     }
   }
-  //
-  //  def boundTest3DString(lbx: String, lby: String, lbz: String, ubx: String, uby: String, ubz: String) = {
-  //    var searchSet = treeString.query(SpaceRegion(Array(Some(lbx), Some(lby), Some(lbz)), Array(Some(ubx), Some(uby), Some(ubz))))
-  //
-  //    var searchPoints = searchSet.toList
-  //    for (i <- 0 until searchPoints.size) {
-  //      assert(searchPoints(i).coord(0) <= ubx && searchPoints(i).coord(1) <= uby)
-  //      assert(searchPoints(i).coord(0) >= lbx && searchPoints(i).coord(1) >= lby)
-  //    }
-  //  }
+
+  def boundTest3DString(lbx: String, lby: String, lbz: String, ubx: String, uby: String, ubz: String) = {
+    var searchSet = treeString.query(SpaceRegion(Array(Some(lbx), Some(lby), Some(lbz)), Array(Some(ubx), Some(uby), Some(ubz))))
+
+    var searchPoints = searchSet.toList
+    for (i <- 0 until searchPoints.size) {
+      assert(searchPoints(i).coord(0) <= ubx && searchPoints(i).coord(1) <= uby)
+      assert(searchPoints(i).coord(0) >= lbx && searchPoints(i).coord(1) >= lby)
+    }
+  }
 }
