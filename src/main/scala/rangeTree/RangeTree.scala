@@ -1,26 +1,26 @@
 package rangeTree
 
-import kdTrees._
+import space._
 
 /**
  *  Abstract class defining the methods used for a rangeTree
  */
-abstract class RangeTree[A](val value: Point[A], val associatedTree: Option[RangeTree[A]], val depth: Int)(implicit ord: Ordering[A]) {
+abstract class RangeTree(val value: SpacePoint, val associatedTree: Option[RangeTree], val depth: Int) {
 
   /**
    * Report all the points in the subtree of the node
    */
-  def reportSubtree: Set[Point[A]]
+  def reportSubtree: Set[SpacePoint]
 
   /**
    *  Returns the split node from the search
    */
-  def findSplitNode(region: SpaceRegion[A]): RangeTree[A]
+  def findSplitNode(region: SpaceRegion): RangeTree
 
   /**
    * Performs a query on this node and returns the set of points in the search space
    */
-  def rangeQuery(region: SpaceRegion[A]): Set[Point[A]] = {
+  def rangeQuery(region: SpaceRegion): Set[SpacePoint] = {
     val splitNode = this.findSplitNode(region)
     splitNode.rangeQueryFromSplitNode(region)
   }
@@ -31,16 +31,16 @@ abstract class RangeTree[A](val value: Point[A], val associatedTree: Option[Rang
    * d1RangeQueryFromSplitNodeLeft : on a left childNode
    * d1RangeQueryFromSplitNodeRight : on a right childNode
    */
-  def rangeQueryFromSplitNode(region: SpaceRegion[A]): Set[Point[A]]
-  def rangeQueryFromSplitNodeLeft(region: SpaceRegion[A]): Set[Point[A]]
-  def rangeQueryFromSplitNodeRight(region: SpaceRegion[A]): Set[Point[A]]
+  def rangeQueryFromSplitNode(region: SpaceRegion): Set[SpacePoint]
+  def rangeQueryFromSplitNodeLeft(region: SpaceRegion): Set[SpacePoint]
+  def rangeQueryFromSplitNodeRight(region: SpaceRegion): Set[SpacePoint]
 
   /**
    * Getter functions for the sub-trees
    */
-  def getLeftTree(): RangeTree[A]
-  def getRightTree(): RangeTree[A]
-  def getAssoTree(): Option[RangeTree[A]]
+  def getLeftTree(): RangeTree
+  def getRightTree(): RangeTree
+  def getAssoTree(): Option[RangeTree]
 }
 
 /**
@@ -52,9 +52,9 @@ object RangeTree {
    * In : a set of Points and a dimension
    * Out : the corresponding rangeTree
    */
-  def apply[A](data: Set[Point[A]], dim: Int)(implicit ord: Ordering[A]): RangeTree[A] = {
-    val sortedPoints = List.tabulate(dim)(d => data.toArray.sortBy(p => (p.coord(d), p.id)))
-    this.buildRangeTree(sortedPoints, 0, dim)
+  def apply[A](data: Set[SpacePoint], dim: Int): RangeTree = {
+    val sortedPoints = List.tabulate(dim)(d => data.toArray.sortWith((p1, p2) => !p1.geqIndex(p2, d + 1)))
+    this.buildRangeTree(sortedPoints, 1, dim)
   }
 
   /**
@@ -62,8 +62,8 @@ object RangeTree {
    * In : list of sorted points, a depth (dimension corresponding to the rangeTree) and the total number of dimensions
    * Out : The rangeTree corresponding
    */
-  def buildRangeTree[A](sortedPoints: List[Array[Point[A]]], depth: Int, dim: Int)(implicit ord: Ordering[A]): RangeTree[A] = {
-    val associatedTree = if (depth == dim - 1)
+  def buildRangeTree[A](sortedPoints: List[Array[SpacePoint]], depth: Int, dim: Int): RangeTree = {
+    val associatedTree = if (depth == dim)
       None
     else
       Some(RangeTree.buildRangeTree(sortedPoints.tail, depth + 1, dim))
@@ -73,10 +73,9 @@ object RangeTree {
     } else {
       val sublength = (sortedPoints(0).length - 1) / 2
       val pivot = sortedPoints(0)(sublength)
-      val pivotCode = (pivot.coord(depth), pivot.id)
 
-      val leftSortedPoints = sortedPoints.map(data => data.filter(d => d.<=(pivot, depth)))
-      val rightSortedPoints = sortedPoints.map(data => data.filter(d => !(d.<=(pivot, depth))))
+      val leftSortedPoints = sortedPoints.map(data => data.filter(d => !d.geqIndex(pivot, depth) || (d == pivot)))
+      val rightSortedPoints = sortedPoints.map(data => data.filter(d => !(!d.geqIndex(pivot, depth) || (d == pivot))))
 
       RangeNode(pivot, associatedTree, depth, RangeTree.buildRangeTree(leftSortedPoints, depth, dim), RangeTree.buildRangeTree(rightSortedPoints, depth, dim))
     }
@@ -86,17 +85,17 @@ object RangeTree {
 /**
  * Class representing an internal node of a rangeTree
  */
-case class RangeNode[A](valueNode: Point[A], assoTree: Option[RangeTree[A]], depthNode: Int, val left: RangeTree[A], val right: RangeTree[A])(implicit ord: Ordering[A]) extends RangeTree[A](valueNode, assoTree, depthNode) {
+case class RangeNode(valueNode: SpacePoint, assoTree: Option[RangeTree], depthNode: Int, val left: RangeTree, val right: RangeTree) extends RangeTree(valueNode, assoTree, depthNode) {
 
-  def reportSubtree: Set[Point[A]] = {
+  def reportSubtree: Set[SpacePoint] = {
     left.reportSubtree ++ right.reportSubtree
   }
 
-  def findSplitNode(region: SpaceRegion[A]): RangeTree[A] = {
-    if (region.contains(depth, value.coord(depth)))
+  def findSplitNode(region: SpaceRegion): RangeTree = {
+    if (region.contains(value, depth))
       this
     else {
-      if (region.sidecontains(depth, value.coord(depth))) { // ?? +-?
+      if (region.leftOfContains(value, depth)) {
         left.findSplitNode(region)
       } else {
         right.findSplitNode(region)
@@ -104,12 +103,12 @@ case class RangeNode[A](valueNode: Point[A], assoTree: Option[RangeTree[A]], dep
     }
   }
 
-  def rangeQueryFromSplitNode(region: SpaceRegion[A]): Set[Point[A]] = {
+  def rangeQueryFromSplitNode(region: SpaceRegion): Set[SpacePoint] = {
     left.rangeQueryFromSplitNodeLeft(region) ++ right.rangeQueryFromSplitNodeRight(region)
   }
 
-  def rangeQueryFromSplitNodeLeft(region: SpaceRegion[A]): Set[Point[A]] = {
-    if (region.leftcontains(depth, value.coord(depth))) {
+  def rangeQueryFromSplitNodeLeft(region: SpaceRegion): Set[SpacePoint] = {
+    if (region.leftcontains(value, depth)) {
       (if (associatedTree.isEmpty)
         right.reportSubtree
       else
@@ -119,8 +118,8 @@ case class RangeNode[A](valueNode: Point[A], assoTree: Option[RangeTree[A]], dep
     }
   }
 
-  def rangeQueryFromSplitNodeRight(region: SpaceRegion[A]): Set[Point[A]] = {
-    if (region.rightcontains(depth, value.coord(depth))) {
+  def rangeQueryFromSplitNodeRight(region: SpaceRegion): Set[SpacePoint] = {
+    if (region.rightcontains(value, depth)) {
       (if (associatedTree.isEmpty)
         left.reportSubtree
       else
@@ -130,41 +129,37 @@ case class RangeNode[A](valueNode: Point[A], assoTree: Option[RangeTree[A]], dep
     }
   }
 
-  def getLeftTree(): RangeTree[A] = left
+  def getLeftTree(): RangeTree = left
 
-  def getRightTree(): RangeTree[A] = right
+  def getRightTree(): RangeTree = right
 
-  def getAssoTree(): Option[RangeTree[A]] = assoTree
+  def getAssoTree(): Option[RangeTree] = assoTree
 }
 
 /**
  * Class representing a leaf of a rangeTree
  */
-case class RangeLeaf[A](valueLeaf: Point[A], assoTree: Option[RangeTree[A]], depthLeaf: Int)(implicit ord: Ordering[A]) extends RangeTree[A](valueLeaf, assoTree, depthLeaf) {
+case class RangeLeaf(valueLeaf: SpacePoint, assoTree: Option[RangeTree], depthLeaf: Int) extends RangeTree(valueLeaf, assoTree, depthLeaf) {
 
-  def reportSubtree: Set[Point[A]] = {
+  def reportSubtree: Set[SpacePoint] = {
     Set(value)
   }
 
-  def findSplitNode(region: SpaceRegion[A]): RangeTree[A] = {
+  def findSplitNode(region: SpaceRegion): RangeTree = {
     this
   }
 
-  def rangeQueryFromSplitNode(region: SpaceRegion[A]): Set[Point[A]] = {
-    if (region.contains(valueLeaf)) {
-      Set(valueLeaf)
-    } else {
-      Set()
-    }
+  def rangeQueryFromSplitNode(region: SpaceRegion): Set[SpacePoint] = {
+    reportIfIn(region)
   }
-  def rangeQueryFromSplitNodeLeft(region: SpaceRegion[A]): Set[Point[A]] = {
-    if (region.contains(valueLeaf)) {
-      Set(valueLeaf)
-    } else {
-      Set()
-    }
+  def rangeQueryFromSplitNodeLeft(region: SpaceRegion): Set[SpacePoint] = {
+    reportIfIn(region)
   }
-  def rangeQueryFromSplitNodeRight(region: SpaceRegion[A]): Set[Point[A]] = {
+  def rangeQueryFromSplitNodeRight(region: SpaceRegion): Set[SpacePoint] = {
+    reportIfIn(region)
+  }
+
+  def reportIfIn(region: SpaceRegion): Set[SpacePoint] = {
     if (region.contains(valueLeaf)) {
       Set(valueLeaf)
     } else {
@@ -172,11 +167,11 @@ case class RangeLeaf[A](valueLeaf: Point[A], assoTree: Option[RangeTree[A]], dep
     }
   }
 
-  def getLeftTree(): RangeTree[A] = null
+  def getLeftTree(): RangeTree = null
 
-  def getRightTree(): RangeTree[A] = null
+  def getRightTree(): RangeTree = null
 
-  def getAssoTree(): Option[RangeTree[A]] = assoTree
+  def getAssoTree(): Option[RangeTree] = assoTree
 }
 
 /**
@@ -187,6 +182,6 @@ object testt extends App {
   println(points.mkString(","))
 
   val tree = RangeTree(points.toSet, 2)
-  println(tree.rangeQuery(SpaceRegion(Array(Some(1), Some(2)), Array(Some(5), Some(5)))))
+  println(tree.rangeQuery(SpaceRegion(Point(-1, Array(1, 2)), Point(-1, Array(5, 5)))))
 
 }
