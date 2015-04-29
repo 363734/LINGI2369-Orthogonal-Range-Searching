@@ -5,9 +5,19 @@ package kdTrees
  */
 abstract class KdTree[A](val value: Point[A], val region: SpaceRegion[A])(implicit ord: Ordering[A]) {
 
+  /**
+   * Performs a query on this node and returns the set of points in the search space
+   */
   def searchKD(range: SpaceRegion[A]): Set[Point[A]]
+
+  /**
+   * Report all the points in the subtree of the node
+   */
   def reportSubtree: Set[Point[A]]
 
+  /**
+   * Getter functions for the sub-trees
+   */
   def getLeftTree(): KdTree[A]
   def getRightTree(): KdTree[A]
 }
@@ -120,14 +130,24 @@ case class Point[A](val id: Int, val coordinate: Array[A])(implicit ord: Orderin
     coordinate(dim)
   }
 
+  /**
+   * Returns the space region associated to the points
+   */
   def getRegion: SpaceRegion[A] = {
     val coordinateO: Array[Option[A]] = coordinate.map(Some(_))
     SpaceRegion(coordinateO, coordinateO)
   }
 
+  /**
+   * Defines the ordering on the points : returns true if the points is smaller or equal
+   */
   def <=(p: Point[A], d: Int): Boolean = {
     (ord.lt(this.coord(d), p.coord(d))) || (ord.equiv(this.coord(d), p.coord(d)) && this.id <= p.id)
   }
+
+  /**
+   * Defines the ordering on the points : returns true if the points is larger or equal
+   */
   def >=(p: A, d: Int): Boolean = {
     (ord.gteq(this.coord(d), p))
   }
@@ -145,15 +165,24 @@ case class SpaceRegion[A](val lb: Array[Option[A]], val ub: Array[Option[A]])(im
 
   //TODO : check the tree are build right.. what in case of search space with a same bound?
 
+  /**
+   * Returns true if the point in argument is contained in the space region
+   */
   def contains(point: Point[A]): Boolean = {
     (0 until point.dim).forall(i => (lb(i).isEmpty || ord.lteq(lb(i).get, point.coord(i))) && (ub(i).isEmpty || ord.lteq(point.coord(i), ub(i).get)))
   }
 
+  /**
+   * Returns true if the space region in argument is contained in the space region
+   */
   def contains(region: SpaceRegion[A]): Boolean = {
     (0 until lb.length).forall(i => ((lb(i).isEmpty) || (!region.lb(i).isEmpty && ord.lteq(lb(i).get, region.lb(i).get))) &&
       ((ub(i).isEmpty) || (!region.ub(i).isEmpty && ord.lteq(region.ub(i).get, ub(i).get))))
   }
 
+  /**
+   * Returns true if there is no intersection between the current space region and the one in argument
+   */
   def dontcontains(region: SpaceRegion[A]): Boolean = {
     (0 until lb.length).forall { i =>
       val a = if (!lb(i).isEmpty && !region.ub(i).isEmpty)
@@ -168,6 +197,9 @@ case class SpaceRegion[A](val lb: Array[Option[A]], val ub: Array[Option[A]])(im
     }
   }
 
+  /**
+   * Returns true if there is an intersection between the current space region and the one in argument
+   */
   def intersect(region: SpaceRegion[A]): Boolean = {
     !dontcontains(region)
   }
@@ -176,12 +208,13 @@ case class SpaceRegion[A](val lb: Array[Option[A]], val ub: Array[Option[A]])(im
    * Checks if a value is between the lower and upper bound
    */
   def contains(dim: Int, coordinate: A): Boolean = {
-    //    (lb(dim).isEmpty || ord.lteq(lb(dim).get, coordinate)) && (ub(dim).isEmpty || ord.lteq(coordinate, ub(dim).get))
     (leftcontains(dim, coordinate) && rightcontains(dim, coordinate))
   }
 
   /**
    * Checks if the current value is bigger than the lowerBound at this dimensions
+   * In : The current dimension and the coordinates of the point
+   * Out : True if the coordinate of the point lies above the lowerbound for the given dimension
    */
   def leftcontains(dim: Int, coordinate: A): Boolean = {
     (lb(dim).isEmpty || ord.lteq(lb(dim).get, coordinate))
@@ -189,22 +222,30 @@ case class SpaceRegion[A](val lb: Array[Option[A]], val ub: Array[Option[A]])(im
 
   /**
    * Checks if the current value is lower than the upperBound at this dimensions
+   * In : The current dimension and the coordinates of the point
+   * Out : True if the coordinate of the point lies below the upperbound for the given dimension
    */
   def rightcontains(dim: Int, coordinate: A): Boolean = {
     (ub(dim).isEmpty || ord.lteq(coordinate, ub(dim).get))
   }
 
   /**
-   * Checks if a value is not in the searchSpace ?
+   * Checks if a value is not in the searchSpace
    */
   def sidecontains(dim: Int, coordinate: A): Boolean = {
     (!ub(dim).isEmpty && ord.lteq(ub(dim).get, coordinate))
   }
 
+  /**
+   * Returns a copy of the space region
+   */
   override def clone = {
     SpaceRegion(lb.clone, ub.clone)
   }
 
+  /**
+   * Cuts the space region into two sub-space regions according to the split value
+   */
   def shrink(dim: Int, value: A): (SpaceRegion[A], SpaceRegion[A]) = {
     val left = this.clone
     val right = this.clone
@@ -213,6 +254,7 @@ case class SpaceRegion[A](val lb: Array[Option[A]], val ub: Array[Option[A]])(im
     (left, right)
   }
 }
+
 /**
  * Object building the full space of the right number of dimensions
  */
@@ -222,6 +264,10 @@ object FullSpace {
     SpaceRegion(Array.fill(dim)(none), Array.fill(dim)(none))
   }
 }
+
+/**
+ * Obsolete object used for some tests
+ */
 object test extends App {
   val points = Array(1, 4, 5, 6, 8, 1, 5, 9, 3).zip(Array(5, 6, 8, 9, 1, 2, 3, 5, 4)).map(x => Array(x._1, x._2)).zipWithIndex.map(x => Point(x._2, x._1))
   println(points.mkString(","))

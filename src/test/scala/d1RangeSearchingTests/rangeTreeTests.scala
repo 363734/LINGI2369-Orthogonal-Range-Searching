@@ -9,13 +9,15 @@ class rangeTreeTests extends FlatSpec {
 
   // Builds the tree of dimension 2 corresponding to the points
   val tree = RangeTree(points.toSet, 2)
-
+  // Get the subtrees
   val rightTree = tree.getRightTree()
   val leftTree = tree.getLeftTree()
   val rlTree = rightTree.getLeftTree()
+
   "The first dimention tree " should " be correctly build." in {
     assert(tree.value.coord(0) == 33)
     assert(tree.value.coord(1) == 17)
+
     assert(leftTree.value.coord(0) == 19)
     assert(leftTree.value.coord(1) == 70)
     assert(rightTree.value.coord(0) == 62)
@@ -54,18 +56,20 @@ class rangeTreeTests extends FlatSpec {
     assert(leftTree.value.coord(1) == 14)
   }
 
-  "The search " should " return correct results." in {
+  // Tests on the search results
+  "The search " should " return (only) the points in the search space " in {
     var searchSet = tree.rangeQuery(SpaceRegion(Array(Some(40), Some(10)), Array(Some(70), Some(60))))
 
     assert(searchSet.size == 2)
     assert(searchSet.contains(points(6)))
     assert(searchSet.contains(points(7)))
     assert(!searchSet.contains(points(0)))
-    //    println(searchSet.toString())
-    //    assert(searchSet.toString().equals("Set((55,14), (62,59))")
+
+    // Reduces the search space to exclusively those points
     searchSet = tree.rangeQuery(SpaceRegion(Array(Some(55), Some(14)), Array(Some(62), Some(59))))
     assert(searchSet.size == 2)
 
+    // Reduces the search space to exclude on of those points on one dimension
     searchSet = tree.rangeQuery(SpaceRegion(Array(Some(56), Some(14)), Array(Some(62), Some(59))))
     assert(searchSet.size == 1)
 
@@ -77,11 +81,15 @@ class rangeTreeTests extends FlatSpec {
 
     searchSet = tree.rangeQuery(SpaceRegion(Array(Some(55), Some(14)), Array(Some(62), Some(58))))
     assert(searchSet.size == 1)
+  }
 
-    searchSet = tree.rangeQuery(SpaceRegion(Array(Some(0), Some(0)), Array(Some(1000), Some(1000))))
+  "A search space containing all the points " should " report all the points" in {
+    val searchSet = tree.rangeQuery(SpaceRegion(Array(Some(0), Some(0)), Array(Some(1000), Some(1000))))
     assert(searchSet.size == 10)
+  }
 
-    searchSet = tree.rangeQuery(SpaceRegion(Array(Some(0), Some(0)), Array(Some(1), Some(1))))
+  "A search space out of the bounds of the points " should " report no point" in {
+    var searchSet = tree.rangeQuery(SpaceRegion(Array(Some(0), Some(0)), Array(Some(1), Some(1))))
     assert(searchSet.size == 0)
 
     searchSet = tree.rangeQuery(SpaceRegion(Array(Some(1000), Some(500)), Array(Some(1001), Some(5001))))
@@ -92,6 +100,19 @@ class rangeTreeTests extends FlatSpec {
     boundTest(40, 10, 70, 60)
     boundTest(10, 58, 23, 69)
     boundTest(0, 0, 10, 50)
+  }
+
+  /**
+   * Function testing that the search results are in the bounds of the search space for 2D Int points
+   */
+  def boundTest(lbx: Int, lby: Int, ubx: Int, uby: Int) = {
+    var searchSet = tree.rangeQuery(SpaceRegion(Array(Some(lbx), Some(lby)), Array(Some(ubx), Some(uby))))
+
+    var searchPoints = searchSet.toList
+    for (i <- 0 until searchPoints.size) {
+      assert(searchPoints(i).coord(0) <= ubx && searchPoints(i).coord(1) <= uby)
+      assert(searchPoints(i).coord(0) >= lbx && searchPoints(i).coord(1) >= lby)
+    }
   }
 
   // Testing on Strings and 3D points
@@ -113,16 +134,9 @@ class rangeTreeTests extends FlatSpec {
     boundTest3DString("c", "c", "e", "q", "t", "e")
   }
 
-  def boundTest(lbx: Int, lby: Int, ubx: Int, uby: Int) = {
-    var searchSet = tree.rangeQuery(SpaceRegion(Array(Some(lbx), Some(lby)), Array(Some(ubx), Some(uby))))
-
-    var searchPoints = searchSet.toList
-    for (i <- 0 until searchPoints.size) {
-      assert(searchPoints(i).coord(0) <= ubx && searchPoints(i).coord(1) <= uby)
-      assert(searchPoints(i).coord(0) >= lbx && searchPoints(i).coord(1) >= lby)
-    }
-  }
-
+  /**
+   * Function testing that the search results are in the bounds of the search space for 3D String points
+   */
   def boundTest3DString(lbx: String, lby: String, lbz: String, ubx: String, uby: String, ubz: String) = {
     var searchSet = treeString.rangeQuery(SpaceRegion(Array(Some(lbx), Some(lby), Some(lbz)), Array(Some(ubx), Some(uby), Some(ubz))))
 
