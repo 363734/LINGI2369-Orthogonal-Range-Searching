@@ -1,10 +1,9 @@
 package fractionalCascading
 
-import kdTrees.Point
-import kdTrees.SpaceRegion
+import space._
 import scala.collection.mutable.Stack
 
-case class ArrayPoints[A](val arrayPoints: Array[Point[A]]) {
+case class ArrayPoints(val arrayPoints: Array[SpacePoint]) {
   val arrayLeft: Array[Int] = Array.fill(arrayPoints.length)(-1)
   val arrayRight: Array[Int] = Array.fill(arrayPoints.length)(-1)
 
@@ -12,15 +11,15 @@ case class ArrayPoints[A](val arrayPoints: Array[Point[A]]) {
 
   override def toString: String = arrayPoints.mkString(" -> ")
 
-  def split(pivot: Point[A], leftNumber: Int): (ArrayPoints[A], ArrayPoints[A]) = {
+  def split(pivot: SpacePoint, leftNumber: Int): (ArrayPoints, ArrayPoints) = {
     var leftIndex = leftNumber
-    val leftArray: Array[Point[A]] = new Array(leftIndex)
+    val leftArray: Array[SpacePoint] = new Array(leftIndex)
     var rightIndex = arrayPoints.length - leftNumber
-    val rightArray: Array[Point[A]] = new Array(rightIndex)
+    val rightArray: Array[SpacePoint] = new Array(rightIndex)
 
     for (index <- (0 until arrayPoints.length).reverse) {
       val elem = arrayPoints(index)
-      if (elem.<=(pivot, pivot.dim - 2)) {
+      if (!elem.geqIndex(pivot, pivot.dim - 1) || (elem == pivot)) {
         leftIndex -= 1
         leftArray(leftIndex) = elem
       } else {
@@ -34,32 +33,22 @@ case class ArrayPoints[A](val arrayPoints: Array[Point[A]]) {
     (ArrayPoints(leftArray), ArrayPoints(rightArray))
   }
 
-  def binarySearch(region: SpaceRegion[A]): (Int, Int) = {
+  def binarySearch(region: SpaceRegion): (Int, Int) = {
     val dim = arrayPoints(0).dim
-    val lb = region.lb(dim - 1)
-    val ub = region.ub(dim - 1)
 
-    val first = if (lb.isEmpty) {
-      0
-    } else {
-      binarySearch(lb.get, 0, arrayPoints.length - 1)
-    }
-    val last = if (ub.isEmpty) {
-      arrayPoints.length
-    } else {
-      binarySearch(ub.get, 0, arrayPoints.length - 1)
-    }
+    val first = binarySearch(region.lb, 0, arrayPoints.length - 1)
+    val last = binarySearch(region.ub, 0, arrayPoints.length - 1)
 
     (first, last)
   }
 
-  def binarySearch(bound: A, from: Int, to: Int): Int = {
+  def binarySearch(bound: SpacePoint, from: Int, to: Int): Int = {
     if (from == to) {
       from
     } else {
       val dim = arrayPoints(0).dim
       val pivot = (from + to) / 2
-      if (arrayPoints(pivot).>=(bound, dim - 1)) {
+      if (arrayPoints(pivot).geq(bound, dim)) {
         binarySearch(bound, from, pivot)
       } else {
         binarySearch(bound, pivot + 1, to)
@@ -67,18 +56,13 @@ case class ArrayPoints[A](val arrayPoints: Array[Point[A]]) {
     }
   }
 
-  def reportSlice(from: Int, until: Int): Set[Point[A]] = {
+  def reportSlice(from: Int, until: Int): Set[SpacePoint] = {
     arrayPoints.slice(from, until).toSet
   }
 
-  def reportSinglePoint(index: Int, region: SpaceRegion[A]): Set[Point[A]] = {
-    if (index < arrayPoints.length) {
-      val value = arrayPoints(index)
-      if (region.contains(value)) {
-        Set(value)
-      } else {
-        Set()
-      }
+  def reportSinglePoint(index: Int, region: SpaceRegion): Set[SpacePoint] = {
+    if (index < arrayPoints.length && region.contains(arrayPoints(index))) {
+      Set(arrayPoints(index))
     } else {
       Set()
     }
@@ -100,26 +84,26 @@ case class ArrayPoints[A](val arrayPoints: Array[Point[A]]) {
 }
 
 object FractionnalLastTree {
-  def apply[A](data: Set[Point[A]], dim: Int)(implicit ord: Ordering[A]): FractionnalLastTree[A] = {
+  def apply(data: Set[SpacePoint], dim: Int): FractionnalLastTree = {
     if (dim != 2) throw new Exception("FractionnalLastTree can only be constructed with d=2")
-    val sortedPoints = List.tabulate(dim)(d => data.toArray.sortBy(p => (p.coord(d), p.id)))
-    this.buildFCLastTree(sortedPoints, 0, dim)
+    val sortedPoints = List.tabulate(dim)(d => data.toArray.sortWith((p1, p2) => !p1.geqIndex(p2, d + 1)))
+    this.buildFCLastTree(sortedPoints, 1, dim)
   }
 
-  def buildFCLastTree[A](sortedPoints: List[Array[Point[A]]], depth: Int, dim: Int)(implicit ord: Ordering[A]): FractionnalLastTree[A] = {
+  def buildFCLastTree[A](sortedPoints: List[Array[SpacePoint]], depth: Int, dim: Int): FractionnalLastTree = {
     val initialArrayNode = ArrayPoints(sortedPoints.last)
     this.buildFCLastTree(sortedPoints, initialArrayNode, depth, dim)
   }
 
-  def buildFCLastTree[A](sortedPoints: List[Array[Point[A]]], arrayNode: ArrayPoints[A], depth: Int, dim: Int)(implicit ord: Ordering[A]): FractionnalLastTree[A] = {
+  def buildFCLastTree[A](sortedPoints: List[Array[SpacePoint]], arrayNode: ArrayPoints, depth: Int, dim: Int): FractionnalLastTree = {
     if (sortedPoints(0).length == 1) {
       FractionnalLastTreeLeaf(sortedPoints(0)(0), depth)
     } else {
       val sublength = (sortedPoints(0).length - 1) / 2
       val pivot = sortedPoints(0)(sublength)
 
-      val leftSortedPoints = sortedPoints.map(data => data.filter(d => d.<=(pivot, depth)))
-      val rightSortedPoints = sortedPoints.map(data => data.filter(d => !(d.<=(pivot, depth))))
+      val leftSortedPoints = sortedPoints.map(data => data.filter(d => !d.geqIndex(pivot, pivot.dim - 1) || (d == pivot)))
+      val rightSortedPoints = sortedPoints.map(data => data.filter(d => !(!d.geqIndex(pivot, pivot.dim - 1) || (d == pivot))))
 
       val (leftANode, rightANode) = arrayNode.split(pivot, leftSortedPoints(0).length)
       FractionnalLastTreeNode(pivot, arrayNode, FractionnalLastTree.buildFCLastTree(leftSortedPoints, leftANode, depth, dim), FractionnalLastTree.buildFCLastTree(rightSortedPoints, rightANode, depth, dim), depth)
@@ -127,34 +111,34 @@ object FractionnalLastTree {
   }
 }
 
-abstract class FractionnalLastTree[A](val value: Point[A],
-  val depth: Int) extends FractionalCascading[A] {
+abstract class FractionnalLastTree(val value: SpacePoint,
+  val depth: Int) extends FractionalCascading {
 
-  def query(region: SpaceRegion[A]): Set[Point[A]] = {
+  def query(region: SpaceRegion): Set[SpacePoint] = {
     val splitNode = this.findSplitNode(region)
     splitNode.queryFromSplitNode(region)
   }
 
-  def findSplitNode(region: SpaceRegion[A]): FractionnalLastTree[A]
+  def findSplitNode(region: SpaceRegion): FractionnalLastTree
 
-  def queryFromSplitNode(region: SpaceRegion[A]): Set[Point[A]]
-  def queryFromSplitNodeLeft(region: SpaceRegion[A], low: Int, up: Int): Set[Point[A]]
-  def queryFromSplitNodeRight(region: SpaceRegion[A], low: Int, up: Int): Set[Point[A]]
+  def queryFromSplitNode(region: SpaceRegion): Set[SpacePoint]
+  def queryFromSplitNodeLeft(region: SpaceRegion, low: Int, up: Int): Set[SpacePoint]
+  def queryFromSplitNodeRight(region: SpaceRegion, low: Int, up: Int): Set[SpacePoint]
 
-  def reportSubtree(region: SpaceRegion[A], low: Int, up: Int): Set[Point[A]]
+  def reportSubtree(region: SpaceRegion, low: Int, up: Int): Set[SpacePoint]
 }
 
-case class FractionnalLastTreeNode[A](valueNode: Point[A],
-  val array: ArrayPoints[A],
-  val left: FractionnalLastTree[A],
-  val right: FractionnalLastTree[A],
-  depthNode: Int) extends FractionnalLastTree[A](valueNode, depthNode) {
+case class FractionnalLastTreeNode(valueNode: SpacePoint,
+  val array: ArrayPoints,
+  val left: FractionnalLastTree,
+  val right: FractionnalLastTree,
+  depthNode: Int) extends FractionnalLastTree(valueNode, depthNode) {
 
-  def findSplitNode(region: SpaceRegion[A]): FractionnalLastTree[A] = {
-    if (region.contains(depth, value.coord(depth))) {
+  def findSplitNode(region: SpaceRegion): FractionnalLastTree = {
+    if (region.contains(value, depth)) {
       this
     } else {
-      if (region.sidecontains(depth, value.coord(depth))) {
+      if (region.leftOfContains(value, depth)) {
         left.findSplitNode(region)
       } else {
         right.findSplitNode(region)
@@ -162,13 +146,13 @@ case class FractionnalLastTreeNode[A](valueNode: Point[A],
     }
   }
 
-  def queryFromSplitNode(region: SpaceRegion[A]): Set[Point[A]] = {
+  def queryFromSplitNode(region: SpaceRegion): Set[SpacePoint] = {
     val (low, up) = array.binarySearch(region)
     left.queryFromSplitNodeLeft(region, array.deepLeft(low), array.deepLeft(up)) ++ right.queryFromSplitNodeRight(region, array.deepRight(low), array.deepRight(up))
   }
 
-  def queryFromSplitNodeLeft(region: SpaceRegion[A], low: Int, up: Int): Set[Point[A]] = {
-    if (region.leftcontains(depth, value.coord(depth))) {
+  def queryFromSplitNodeLeft(region: SpaceRegion, low: Int, up: Int): Set[SpacePoint] = {
+    if (region.leftcontains(value, depth)) {
       right.reportSubtree(region, array.deepRight(low), array.deepRight(up)) ++
         left.queryFromSplitNodeLeft(region, array.deepLeft(low), array.deepLeft(up))
     } else {
@@ -176,8 +160,8 @@ case class FractionnalLastTreeNode[A](valueNode: Point[A],
     }
   }
 
-  def queryFromSplitNodeRight(region: SpaceRegion[A], low: Int, up: Int): Set[Point[A]] = {
-    if (region.rightcontains(depth, value.coord(depth))) {
+  def queryFromSplitNodeRight(region: SpaceRegion, low: Int, up: Int): Set[SpacePoint] = {
+    if (region.rightcontains(value, depth)) {
       left.reportSubtree(region, array.deepLeft(low), array.deepLeft(up)) ++
         right.queryFromSplitNodeRight(region, array.deepRight(low), array.deepRight(up))
     } else {
@@ -185,42 +169,42 @@ case class FractionnalLastTreeNode[A](valueNode: Point[A],
     }
   }
 
-  def reportSubtree(region: SpaceRegion[A], low: Int, up: Int): Set[Point[A]] = {
+  def reportSubtree(region: SpaceRegion, low: Int, up: Int): Set[SpacePoint] = {
     array.reportSlice(low, up) ++ array.reportSinglePoint(up, region)
   }
 
-  def getLeftTree(): FractionnalLastTree[A] = left
+  def getLeftTree(): FractionnalLastTree = left
 
-  def getRightTree(): FractionnalLastTree[A] = right
+  def getRightTree(): FractionnalLastTree = right
 
-  def getAssoTree(): FractionnalLastTree[A] = null
+  def getAssoTree(): FractionnalLastTree = null
 
-  def getValue(): Point[A] = value
+  def getValue(): SpacePoint = value
 
   def getDepth(): Int = depth
 }
 
-case class FractionnalLastTreeLeaf[A](valueLeaf: Point[A],
-  depthLeaf: Int) extends FractionnalLastTree[A](valueLeaf, depthLeaf) {
+case class FractionnalLastTreeLeaf(valueLeaf: SpacePoint,
+  depthLeaf: Int) extends FractionnalLastTree(valueLeaf, depthLeaf) {
 
-  def findSplitNode(region: SpaceRegion[A]): FractionnalLastTree[A] = {
+  def findSplitNode(region: SpaceRegion): FractionnalLastTree = {
     this
   }
 
-  def queryFromSplitNode(region: SpaceRegion[A]): Set[Point[A]] = {
+  def queryFromSplitNode(region: SpaceRegion): Set[SpacePoint] = {
     reportIfIn(region)
   }
-  def queryFromSplitNodeLeft(region: SpaceRegion[A], low: Int, up: Int): Set[Point[A]] = {
+  def queryFromSplitNodeLeft(region: SpaceRegion, low: Int, up: Int): Set[SpacePoint] = {
     reportIfIn(region)
   }
-  def queryFromSplitNodeRight(region: SpaceRegion[A], low: Int, up: Int): Set[Point[A]] = {
+  def queryFromSplitNodeRight(region: SpaceRegion, low: Int, up: Int): Set[SpacePoint] = {
     reportIfIn(region)
   }
-  def reportSubtree(region: SpaceRegion[A], low: Int, up: Int): Set[Point[A]] = {
+  def reportSubtree(region: SpaceRegion, low: Int, up: Int): Set[SpacePoint] = {
     reportIfIn(region)
   }
 
-  def reportIfIn(region: SpaceRegion[A]): Set[Point[A]] = {
+  def reportIfIn(region: SpaceRegion): Set[SpacePoint] = {
     if (region.contains(valueLeaf)) {
       Set(valueLeaf)
     } else {
@@ -228,13 +212,13 @@ case class FractionnalLastTreeLeaf[A](valueLeaf: Point[A],
     }
   }
 
-  def getLeftTree(): FractionnalLastTree[A] = null
+  def getLeftTree(): FractionnalLastTree = null
 
-  def getRightTree(): FractionnalLastTree[A] = null
+  def getRightTree(): FractionnalLastTree = null
 
-  def getAssoTree(): FractionnalLastTree[A] = null
+  def getAssoTree(): FractionnalLastTree = null
 
-  def getValue(): Point[A] = value
+  def getValue(): SpacePoint = value
 
   def getDepth(): Int = depth
 }
@@ -244,7 +228,9 @@ object test extends App {
   println(points.mkString(","))
   println(points.size)
   val tree = FractionnalLastTree(points.toSet, 2)
-  val queryresult = tree.query(SpaceRegion(Array(Some(0), Some(0)), Array(Some(10), Some(10))))
+  val lb = Point(-1, Array(1, 2))
+  val ub = Point(-1, Array(5, 5))
+  val queryresult = tree.query(SpaceRegion(lb, ub))
   println(queryresult)
   println(queryresult.size)
 }

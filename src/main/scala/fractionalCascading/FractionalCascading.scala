@@ -1,77 +1,77 @@
 package fractionalCascading
 
-import kdTrees.Point
-import kdTrees.SpaceRegion
+import space._
 
-abstract class FractionalCascading[A] {
+abstract class FractionalCascading {
 
-  def query(region: SpaceRegion[A]): Set[Point[A]]
+  def query(region: SpaceRegion): Set[SpacePoint]
 
-  def getLeftTree(): FractionalCascading[A]
-  def getRightTree(): FractionalCascading[A]
-  def getAssoTree(): FractionalCascading[A]
-  def getValue(): Point[A]
+  def getLeftTree(): FractionalCascading
+  def getRightTree(): FractionalCascading
+  def getAssoTree(): FractionalCascading
+  def getValue(): SpacePoint
   def getDepth(): Int
 }
 
-abstract class FractionnalTree[A](val value: Point[A],
-                                  val depth: Int) extends FractionalCascading[A] {
+abstract class FractionnalTree(val value: SpacePoint,
+  val depth: Int) extends FractionalCascading {
 
-  def findSplitNode(region: SpaceRegion[A]): FractionnalTree[A]
+  def findSplitNode(region: SpaceRegion): FractionnalTree
 
-  def query(region: SpaceRegion[A]): Set[Point[A]] = {
+  def query(region: SpaceRegion): Set[SpacePoint] = {
     val splitNode = this.findSplitNode(region)
     splitNode.queryFromSplitNode(region)
   }
 
-  def queryFromSplitNode(region: SpaceRegion[A]): Set[Point[A]]
-  def queryFromSplitNodeLeft(region: SpaceRegion[A]): Set[Point[A]]
-  def queryFromSplitNodeRight(region: SpaceRegion[A]): Set[Point[A]]
+  def queryFromSplitNode(region: SpaceRegion): Set[SpacePoint]
+  def queryFromSplitNodeLeft(region: SpaceRegion): Set[SpacePoint]
+  def queryFromSplitNodeRight(region: SpaceRegion): Set[SpacePoint]
 }
 
 object FractionnalTree {
-  def apply[A](data: Set[Point[A]], dim: Int)(implicit ord: Ordering[A]): FractionalCascading[A] = {
+  def apply(data: Set[SpacePoint], dim: Int): FractionalCascading = {
     if (dim < 2) throw new Exception("Fractionnal Cascading don't work with dim < 2")
-    val sortedPoints = List.tabulate(dim)(d => data.toArray.sortBy(p => (p.coord(d), p.id)))
-    this.buildFCTree(sortedPoints, 0, dim)
+    val sortedPoints = List.tabulate(dim)(d => data.toArray.sortWith((p1, p2) => !p1.geqIndex(p2, d + 1)))
+    this.buildFCTree(sortedPoints, 1, dim)
   }
 
-  def buildFCTree[A](sortedPoints: List[Array[Point[A]]], depth: Int, dim: Int)(implicit ord: Ordering[A]): FractionalCascading[A] = {
-    if (depth == dim - 2) {
+  def buildFCTree(sortedPoints: List[Array[SpacePoint]], depth: Int, dim: Int): FractionalCascading = {
+    if (depth == dim - 1) {
       FractionnalLastTree.buildFCLastTree(sortedPoints, depth, dim)
     } else {
       FractionnalTree.buildFCTreeSameDepth(sortedPoints, depth, dim)
     }
   }
 
-  def buildFCTreeSameDepth[A](sortedPoints: List[Array[Point[A]]], depth: Int, dim: Int)(implicit ord: Ordering[A]): FractionnalTree[A] = {
+  def buildFCTreeSameDepth[A](sortedPoints: List[Array[SpacePoint]], depth: Int, dim: Int): FractionnalTree = {
     if (sortedPoints(0).length == 1) {
       FractionnalTreeLeaf(sortedPoints(0)(0), depth)
     } else {
       val associatedTree = FractionnalTree.buildFCTree(sortedPoints.tail, depth + 1, dim)
+
       val sublength = (sortedPoints(0).length - 1) / 2
       val pivot = sortedPoints(0)(sublength)
-      val pivotCode = (pivot.coord(depth), pivot.id)
 
-      val leftSortedPoints = sortedPoints.map(data => data.filter(d => ord.lt(d.coord(depth), pivotCode._1) || ((ord.equiv(d.coord(depth), pivotCode._1) && d.id <= pivotCode._2))))
-      val rightSortedPoints = sortedPoints.map(data => data.filter(d => !((ord.lt(d.coord(depth), pivotCode._1) || ((ord.equiv(d.coord(depth), pivotCode._1) && d.id <= pivotCode._2))))))
+      val leftSortedPoints = sortedPoints.map(data => data.filter(d => !d.geqIndex(pivot, depth) || (d == pivot)))
+      val rightSortedPoints = sortedPoints.map(data => data.filter(d => !(!d.geqIndex(pivot, depth) || (d == pivot))))
+
       FractionnalTreeNode(pivot, associatedTree, FractionnalTree.buildFCTreeSameDepth(leftSortedPoints, depth, dim), FractionnalTree.buildFCTreeSameDepth(rightSortedPoints, depth, dim), depth)
     }
   }
 
 }
 
-case class FractionnalTreeNode[A](valueNode: Point[A],
-                                  val associatedTree: FractionalCascading[A],
-                                  val left: FractionnalTree[A],
-                                  val right: FractionnalTree[A],
-                                  depthNode: Int) extends FractionnalTree[A](valueNode, depthNode) {
+case class FractionnalTreeNode(valueNode: SpacePoint,
+  val associatedTree: FractionalCascading,
+  val left: FractionnalTree,
+  val right: FractionnalTree,
+  depthNode: Int) extends FractionnalTree(valueNode, depthNode) {
 
-  def findSplitNode(region: SpaceRegion[A]): FractionnalTree[A] = {
-    if (region.contains(depth, value.coord(depth)))
+  def findSplitNode(region: SpaceRegion): FractionnalTree = {
+    if (region.contains(value, depth))
       this
     else {
-      if (region.sidecontains(depth, value.coord(depth))) { // ?? +-?
+      if (region.leftOfContains(value, depth)) {
         left.findSplitNode(region)
       } else {
         right.findSplitNode(region)
@@ -79,55 +79,55 @@ case class FractionnalTreeNode[A](valueNode: Point[A],
     }
   }
 
-  def queryFromSplitNode(region: SpaceRegion[A]): Set[Point[A]] = {
+  def queryFromSplitNode(region: SpaceRegion): Set[SpacePoint] = {
     left.queryFromSplitNodeLeft(region) ++ right.queryFromSplitNodeRight(region)
   }
 
-  def queryFromSplitNodeLeft(region: SpaceRegion[A]): Set[Point[A]] = {
-    if (region.leftcontains(depth, value.coord(depth))) {
+  def queryFromSplitNodeLeft(region: SpaceRegion): Set[SpacePoint] = {
+    if (region.leftcontains(value, depth)) {
       associatedTree.query(region) ++ left.queryFromSplitNodeLeft(region)
     } else {
       right.queryFromSplitNodeLeft(region)
     }
   }
 
-  def queryFromSplitNodeRight(region: SpaceRegion[A]): Set[Point[A]] = {
-    if (region.rightcontains(depth, value.coord(depth))) {
+  def queryFromSplitNodeRight(region: SpaceRegion): Set[SpacePoint] = {
+    if (region.rightcontains(value, depth)) {
       associatedTree.query(region) ++ right.queryFromSplitNodeRight(region)
     } else {
       left.queryFromSplitNodeRight(region)
     }
   }
 
-  def getLeftTree(): FractionnalTree[A] = left
+  def getLeftTree(): FractionnalTree = left
 
-  def getRightTree(): FractionnalTree[A] = right
+  def getRightTree(): FractionnalTree = right
 
-  def getAssoTree(): FractionalCascading[A] = associatedTree
+  def getAssoTree(): FractionalCascading = associatedTree
 
-  def getValue(): Point[A] = value
+  def getValue(): SpacePoint = value
 
   def getDepth(): Int = depth
 }
 
-case class FractionnalTreeLeaf[A](valueLeaf: Point[A],
-                                  depthLeaf: Int) extends FractionnalTree[A](valueLeaf, depthLeaf) {
+case class FractionnalTreeLeaf(valueLeaf: SpacePoint,
+  depthLeaf: Int) extends FractionnalTree(valueLeaf, depthLeaf) {
 
-  def findSplitNode(region: SpaceRegion[A]): FractionnalTree[A] = {
+  def findSplitNode(region: SpaceRegion): FractionnalTree = {
     this
   }
 
-  def queryFromSplitNode(region: SpaceRegion[A]): Set[Point[A]] = {
+  def queryFromSplitNode(region: SpaceRegion): Set[SpacePoint] = {
     reportIfIn(region)
   }
-  def queryFromSplitNodeLeft(region: SpaceRegion[A]): Set[Point[A]] = {
+  def queryFromSplitNodeLeft(region: SpaceRegion): Set[SpacePoint] = {
     reportIfIn(region)
   }
-  def queryFromSplitNodeRight(region: SpaceRegion[A]): Set[Point[A]] = {
+  def queryFromSplitNodeRight(region: SpaceRegion): Set[SpacePoint] = {
     reportIfIn(region)
   }
 
-  def reportIfIn(region: SpaceRegion[A]): Set[Point[A]] = {
+  def reportIfIn(region: SpaceRegion): Set[SpacePoint] = {
     if (region.contains(valueLeaf)) {
       Set(valueLeaf)
     } else {
@@ -135,13 +135,13 @@ case class FractionnalTreeLeaf[A](valueLeaf: Point[A],
     }
   }
 
-  def getLeftTree(): FractionnalTree[A] = null
+  def getLeftTree(): FractionnalTree = null
 
-  def getRightTree(): FractionnalTree[A] = null
+  def getRightTree(): FractionnalTree = null
 
-  def getAssoTree(): FractionalCascading[A] = null
+  def getAssoTree(): FractionalCascading = null
 
-  def getValue(): Point[A] = value
+  def getValue(): SpacePoint = value
 
   def getDepth(): Int = depth
 }
