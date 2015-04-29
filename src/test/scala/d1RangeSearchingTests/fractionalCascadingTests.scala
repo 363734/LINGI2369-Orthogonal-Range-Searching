@@ -45,8 +45,8 @@ class fractionalCascadingTests extends FlatSpec {
     searchSet = tree.query(SpaceRegion(Array(Some(56), Some(14)), Array(Some(62), Some(59))))
     assert(searchSet.size == 1)
 
-    //    searchSet = tree.query(SpaceRegion(Array(Some(55), Some(15)), Array(Some(62), Some(59))))
-    //    assert(searchSet.size == 1)
+    searchSet = tree.query(SpaceRegion(Array(Some(55), Some(15)), Array(Some(62), Some(59))))
+    assert(searchSet.size == 1)
 
     searchSet = tree.query(SpaceRegion(Array(Some(55), Some(14)), Array(Some(61), Some(59))))
     assert(searchSet.size == 1)
@@ -54,8 +54,8 @@ class fractionalCascadingTests extends FlatSpec {
     searchSet = tree.query(SpaceRegion(Array(Some(55), Some(14)), Array(Some(62), Some(58))))
     assert(searchSet.size == 1)
 
-    //    searchSet = tree.query(SpaceRegion(Array(Some(0), Some(0)), Array(Some(1000), Some(1000))))
-    //    assert(searchSet.size == 10)
+    searchSet = tree.query(SpaceRegion(Array(Some(0), Some(0)), Array(Some(1000), Some(1000))))
+    assert(searchSet.size == 10)
 
     searchSet = tree.query(SpaceRegion(Array(Some(0), Some(0)), Array(Some(1), Some(1))))
     assert(searchSet.size == 0)
@@ -66,7 +66,7 @@ class fractionalCascadingTests extends FlatSpec {
 
   "The search " should " not contain results out of the bounds." in {
     boundTest(40, 10, 70, 60)
-    //    boundTest(10, 58, 23, 69)
+    boundTest(10, 58, 23, 69)
     boundTest(0, 0, 10, 50)
   }
 
@@ -98,7 +98,7 @@ class fractionalCascadingTests extends FlatSpec {
       assert(searchPoints(i).coord(0) >= lbx && searchPoints(i).coord(1) >= lby)
     }
   }
-
+  //
   //  def boundTest3DString(lbx: String, lby: String, lbz: String, ubx: String, uby: String, ubz: String) = {
   //    var searchSet = treeString.query(SpaceRegion(Array(Some(lbx), Some(lby), Some(lbz)), Array(Some(ubx), Some(uby), Some(ubz))))
   //
