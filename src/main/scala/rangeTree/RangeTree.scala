@@ -59,7 +59,7 @@ object RangeTree {
 
   /**
    * Method used to build the rangeTree from a sorted set of points
-   * In : list of sorted points, a depth (dimension corresponding to the rangeTree) and the total number of dimensions
+   * In : list of sorted points, a depth (dimension corresponding to the current rangeTree) and the total number of dimensions
    * Out : The rangeTree corresponding
    */
   def buildRangeTree[A](sortedPoints: List[Array[SpacePoint]], depth: Int, dim: Int): RangeTree = {
