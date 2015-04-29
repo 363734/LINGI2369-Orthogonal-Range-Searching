@@ -3,6 +3,7 @@ package OrthogonalRangeSearching
 import scala.io.Source
 import rangeTree._
 import kdTrees._
+import fractionalCascading._
 
 /**
  * Read the file and return the data from it
@@ -42,6 +43,9 @@ object Reader extends App {
 
   val rangeTree = RangeTree(points.toSet, 2)
 
+  val fractionalTree = FractionnalTree(points.toSet, 2)
+
   println(kdTree.searchKD(SpaceRegion(Array(Some(1850), Some(0)), Array(Some(1900), Some(500)))))
   println(rangeTree.rangeQuery(SpaceRegion(Array(Some(1850), Some(0)), Array(Some(1900), Some(500)))))
+  println(fractionalTree.query(SpaceRegion(Array(Some(1850), Some(0)), Array(Some(1900), Some(500)))))
 }

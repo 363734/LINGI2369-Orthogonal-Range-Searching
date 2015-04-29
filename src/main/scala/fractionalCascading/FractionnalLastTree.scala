@@ -5,9 +5,9 @@ import kdTrees.SpaceRegion
 import scala.collection.mutable.Stack
 
 case class FCNode[A](val value: Point[A],
-  var next: Option[FCNode[A]] = None,
-  var left: Option[FCNode[A]] = None,
-  var right: Option[FCNode[A]] = None) {
+                     var next: Option[FCNode[A]] = None,
+                     var left: Option[FCNode[A]] = None,
+                     var right: Option[FCNode[A]] = None) {
 
   def reportUntil(end: Option[FCNode[A]]): Set[Point[A]] = {
     if (next.isEmpty || (!end.isEmpty && (this == end.get))) {
@@ -160,7 +160,7 @@ object FractionnalLastTree {
 }
 
 abstract class FractionnalLastTree[A](val value: Point[A],
-  val depth: Int) extends FractionalCascading[A] {
+                                      val depth: Int) extends FractionalCascading[A] {
 
   def query(region: SpaceRegion[A]): Set[Point[A]] = {
     val splitNode = this.findSplitNode(region)
@@ -177,10 +177,10 @@ abstract class FractionnalLastTree[A](val value: Point[A],
 }
 
 case class FractionnalLastTreeNode[A](valueNode: Point[A],
-  val array: Array[FCNode[A]],
-  val left: FractionnalLastTree[A],
-  val right: FractionnalLastTree[A],
-  depthNode: Int) extends FractionnalLastTree[A](valueNode, depthNode) {
+                                      val array: Array[FCNode[A]],
+                                      val left: FractionnalLastTree[A],
+                                      val right: FractionnalLastTree[A],
+                                      depthNode: Int) extends FractionnalLastTree[A](valueNode, depthNode) {
 
   def findSplitNode(region: SpaceRegion[A]): FractionnalLastTree[A] = {
     if (region.contains(depth, value.coord(depth)))
@@ -220,10 +220,20 @@ case class FractionnalLastTreeNode[A](valueNode: Point[A],
   def reportSubtree(region: SpaceRegion[A], low: FCNode[A], up: Option[FCNode[A]]): Set[Point[A]] = {
     low.reportUntil(up) ++ (if (up.isEmpty) Set() else up.get.report(region))
   }
+
+  def getLeftTree(): FractionnalLastTree[A] = left
+
+  def getRightTree(): FractionnalLastTree[A] = right
+
+  def getAssoTree(): FractionnalLastTree[A] = null
+
+  def getValue(): Point[A] = value
+
+  def getDepth(): Int = depth
 }
 
 case class FractionnalLastTreeLeaf[A](valueLeaf: Point[A],
-  depthLeaf: Int) extends FractionnalLastTree[A](valueLeaf, depthLeaf) {
+                                      depthLeaf: Int) extends FractionnalLastTree[A](valueLeaf, depthLeaf) {
 
   def findSplitNode(region: SpaceRegion[A]): FractionnalLastTree[A] = {
     this
@@ -249,6 +259,16 @@ case class FractionnalLastTreeLeaf[A](valueLeaf: Point[A],
       Set()
     }
   }
+
+  def getLeftTree(): FractionnalLastTree[A] = null
+
+  def getRightTree(): FractionnalLastTree[A] = null
+
+  def getAssoTree(): FractionnalLastTree[A] = null
+
+  def getValue(): Point[A] = value
+
+  def getDepth(): Int = depth
 }
 
 object test extends App {
