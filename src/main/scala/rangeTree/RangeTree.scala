@@ -178,6 +178,7 @@ case class RangeLeaf(valueLeaf: SpacePoint, assoTree: Option[RangeTree], depthLe
  * Obsolete object used for some tests
  */
 object testt extends App {
+  implicit val boundInt = (Int.MinValue, Int.MaxValue)
   val points = Array(1, 4, 5, 6, 8, 1, 5, 9, 3).zip(Array(5, 6, 8, 9, 1, 2, 3, 5, 4)).map(x => Array(x._1, x._2)).zipWithIndex.map(x => Point(x._2, x._1))
   println(points.mkString(","))
 

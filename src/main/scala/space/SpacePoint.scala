@@ -60,9 +60,11 @@ abstract class SpacePoint {
    */
   def copyBut(point: SpacePoint, dim: Int): SpacePoint
 
+  def getFullSpace: SpaceRegion
+
 }
 
-case class Point[A](val id: Int, coordinate: Array[A])(implicit ord: Ordering[A], m: ClassTag[A]) extends SpacePoint {
+case class Point[A](val id: Int, coordinate: Array[A])(implicit ord: Ordering[A], m: ClassTag[A], domainBound: (A, A)) extends SpacePoint {
 
   val dim = coordinate.length
 
@@ -75,8 +77,14 @@ case class Point[A](val id: Int, coordinate: Array[A])(implicit ord: Ordering[A]
 
   def copyBut(point: SpacePoint, dim: Int): SpacePoint = {
     val thatInstance = point.asInstanceOf[Point[A]]
-    val newCoordinate = Array.tabulate(dim)(index => (if (index + 1 == dim) { thatInstance.coordinate(index) } else { coordinate(index) }))
+    val newCoordinate = Array.tabulate(this.dim)(index => (if (index + 1 == dim) { thatInstance.coordinate(index) } else { coordinate(index) }))
     Point(this.id, newCoordinate)
+  }
+
+  def getFullSpace: SpaceRegion = {
+    val lb = Point(-1, Array.fill(dim)(domainBound._1))
+    val ub = Point(-1, Array.fill(dim)(domainBound._2))
+    SpaceRegion(lb, ub)
   }
 
   override def toString: String = {

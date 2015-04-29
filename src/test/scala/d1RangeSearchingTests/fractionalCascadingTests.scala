@@ -4,6 +4,8 @@ import space._
 import fractionalCascading._
 
 class fractionalCascadingTests extends FlatSpec {
+  implicit val boundInt = (Int.MinValue, Int.MaxValue)
+  implicit val boundString = ("", "zzzzz")
   // Points are : [3;5], [10;20], [19;70], [25;93], [33 :17], [41;63], [55,14], [62;59], [83;47], [91;73]
   val points = Array(3, 10, 19, 25, 33, 41, 55, 62, 83, 91).zip(Array(5, 20, 70, 93, 17, 63, 14, 59, 47, 73)).map(x => Array(x._1, x._2)).zipWithIndex.map(x => Point(x._2, x._1))
 
