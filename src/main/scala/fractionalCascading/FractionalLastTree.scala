@@ -110,8 +110,8 @@ case class ArrayPoints(val arrayPoints: Array[SpacePoint]) {
 /**
  * Abstract class defining the methods used for a rangeTree using fractional cascading for a terminal tree
  */
-abstract class FractionnalLastTree(val value: SpacePoint,
-                                   val depth: Int) extends FractionalCascading {
+abstract class FractionalLastTree(val value: SpacePoint,
+                                  val depth: Int) extends FractionalCascading {
 
   /**
    *  Returns the split node from the search
@@ -124,7 +124,7 @@ abstract class FractionnalLastTree(val value: SpacePoint,
   /**
    *  Returns the split node from the search
    */
-  def findSplitNode(region: SpaceRegion): FractionnalLastTree
+  def findSplitNode(region: SpaceRegion): FractionalLastTree
 
   /**
    * Group of functions the query on this node :
@@ -145,14 +145,14 @@ abstract class FractionnalLastTree(val value: SpacePoint,
 /**
  * Object that will be used to build the fractional cascading structure for the last dimension
  */
-object FractionnalLastTree {
+object FractionalLastTree {
   /**
    * Constructor of the fractional cascading structure for the last dimension
    * In : a set of Points and a dimension
    * Out : the corresponding fractional cascading structure for the last dimension
    */
-  def apply(data: Set[SpacePoint], dim: Int): FractionnalLastTree = {
-    if (dim != 2) throw new Exception("FractionnalLastTree can only be constructed with d=2")
+  def apply(data: Set[SpacePoint], dim: Int): FractionalLastTree = {
+    if (dim != 2) throw new Exception("FractionalLastTree can only be constructed with d=2")
     val sortedPoints = List.tabulate(dim)(d => data.toArray.sortWith((p1, p2) => !p1.geqIndex(p2, d + 1)))
     this.buildFCLastTree(sortedPoints, 1, dim)
   }
@@ -162,7 +162,7 @@ object FractionnalLastTree {
    * In : list of sorted points, a depth (dimension corresponding to the current rangeTree) and the total number of dimensions
    * Out : The fractional cascading structure for the last dimension
    */
-  def buildFCLastTree[A](sortedPoints: List[Array[SpacePoint]], depth: Int, dim: Int): FractionnalLastTree = {
+  def buildFCLastTree[A](sortedPoints: List[Array[SpacePoint]], depth: Int, dim: Int): FractionalLastTree = {
     val initialArrayNode = ArrayPoints(sortedPoints.last)
     this.buildFCLastTree(sortedPoints, initialArrayNode, depth, dim)
   }
@@ -172,9 +172,9 @@ object FractionnalLastTree {
    * In : list of sorted points, a depth (dimension corresponding to the current rangeTree) and the total number of dimensions
    * Out : The fractional cascading structure corresponding
    */
-  def buildFCLastTree[A](sortedPoints: List[Array[SpacePoint]], arrayNode: ArrayPoints, depth: Int, dim: Int): FractionnalLastTree = {
+  def buildFCLastTree[A](sortedPoints: List[Array[SpacePoint]], arrayNode: ArrayPoints, depth: Int, dim: Int): FractionalLastTree = {
     if (sortedPoints(0).length == 1) {
-      FractionnalLastTreeLeaf(sortedPoints(0)(0), depth)
+      FractionalLastTreeLeaf(sortedPoints(0)(0), depth)
     } else {
       val sublength = (sortedPoints(0).length - 1) / 2
       val pivot = sortedPoints(0)(sublength)
@@ -183,7 +183,7 @@ object FractionnalLastTree {
       val rightSortedPoints = sortedPoints.map(data => data.filter(d => !(!d.geqIndex(pivot, pivot.dim - 1) || (d == pivot))))
 
       val (leftANode, rightANode) = arrayNode.split(pivot, leftSortedPoints(0).length)
-      FractionnalLastTreeNode(pivot, arrayNode, FractionnalLastTree.buildFCLastTree(leftSortedPoints, leftANode, depth, dim), FractionnalLastTree.buildFCLastTree(rightSortedPoints, rightANode, depth, dim), depth)
+      FractionalLastTreeNode(pivot, arrayNode, FractionalLastTree.buildFCLastTree(leftSortedPoints, leftANode, depth, dim), FractionalLastTree.buildFCLastTree(rightSortedPoints, rightANode, depth, dim), depth)
     }
   }
 }
@@ -191,13 +191,13 @@ object FractionnalLastTree {
 /**
  * Class representing an internal node of a rangeTree with fractional cascading at the last depth
  */
-case class FractionnalLastTreeNode(valueNode: SpacePoint,
-                                   val array: ArrayPoints,
-                                   val left: FractionnalLastTree,
-                                   val right: FractionnalLastTree,
-                                   depthNode: Int) extends FractionnalLastTree(valueNode, depthNode) {
+case class FractionalLastTreeNode(valueNode: SpacePoint,
+                                  val array: ArrayPoints,
+                                  val left: FractionalLastTree,
+                                  val right: FractionalLastTree,
+                                  depthNode: Int) extends FractionalLastTree(valueNode, depthNode) {
 
-  def findSplitNode(region: SpaceRegion): FractionnalLastTree = {
+  def findSplitNode(region: SpaceRegion): FractionalLastTree = {
     if (region.contains(value, depth)) {
       this
     } else {
@@ -236,21 +236,21 @@ case class FractionnalLastTreeNode(valueNode: SpacePoint,
     array.reportSlice(low, up) ++ array.reportSinglePoint(up, region)
   }
 
-  def getLeftTree(): FractionnalLastTree = left
+  def getLeftTree(): FractionalLastTree = left
 
-  def getRightTree(): FractionnalLastTree = right
+  def getRightTree(): FractionalLastTree = right
 
-  def getAssoTree(): FractionnalLastTree = null
+  def getAssoTree(): FractionalLastTree = null
 
   def getValue(): SpacePoint = value
 
   def getDepth(): Int = depth
 }
 
-case class FractionnalLastTreeLeaf(valueLeaf: SpacePoint,
-                                   depthLeaf: Int) extends FractionnalLastTree(valueLeaf, depthLeaf) {
+case class FractionalLastTreeLeaf(valueLeaf: SpacePoint,
+                                  depthLeaf: Int) extends FractionalLastTree(valueLeaf, depthLeaf) {
 
-  def findSplitNode(region: SpaceRegion): FractionnalLastTree = {
+  def findSplitNode(region: SpaceRegion): FractionalLastTree = {
     this
   }
 
@@ -275,11 +275,11 @@ case class FractionnalLastTreeLeaf(valueLeaf: SpacePoint,
     }
   }
 
-  def getLeftTree(): FractionnalLastTree = null
+  def getLeftTree(): FractionalLastTree = null
 
-  def getRightTree(): FractionnalLastTree = null
+  def getRightTree(): FractionalLastTree = null
 
-  def getAssoTree(): FractionnalLastTree = null
+  def getAssoTree(): FractionalLastTree = null
 
   def getValue(): SpacePoint = value
 
@@ -294,7 +294,7 @@ object test extends App {
   val points = Array(1, 4, 5, 6, 8, 1, 5, 9, 3, 7).zip(Array(5, 6, 8, 9, 1, 2, 3, 5, 4, 3)).map(x => Array(x._1, x._2)).zipWithIndex.map(x => Point(x._2, x._1))
   println(points.mkString(","))
   println(points.size)
-  val tree = FractionnalLastTree(points.toSet, 2)
+  val tree = FractionalLastTree(points.toSet, 2)
   val lb = Point(-1, Array(1, 2))
   val ub = Point(-1, Array(5, 5))
   val queryresult = tree.query(SpaceRegion(lb, ub))

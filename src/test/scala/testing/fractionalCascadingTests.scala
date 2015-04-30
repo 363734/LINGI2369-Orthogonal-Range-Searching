@@ -10,7 +10,7 @@ class fractionalCascadingTests extends FlatSpec {
   val points = Array(3, 10, 19, 25, 33, 41, 55, 62, 83, 91).zip(Array(5, 20, 70, 93, 17, 63, 14, 59, 47, 73)).map(x => Array(x._1, x._2)).zipWithIndex.map(x => Point(x._2, x._1))
 
   // Builds the tree of dimension 2 corresponding to the points
-  val tree = FractionnalTree(points.toSet, 2)
+  val tree = FractionalTree(points.toSet, 2)
   // Get the subtrees
   val rightTree = tree.getRightTree()
   val leftTree = tree.getLeftTree()
@@ -98,7 +98,7 @@ class fractionalCascadingTests extends FlatSpec {
     .map(x => Array(x._1._1, x._1._2, x._2)).zipWithIndex.map(x => Point(x._2, x._1))
 
   // Builds the tree of dimension 3 corresponding to the points
-  val treeString = FractionnalTree(points3DStrings.toSet, 3)
+  val treeString = FractionalTree(points3DStrings.toSet, 3)
 
   "The search (3D on Strings) " should " contain all the results in the bounds." in {
     assert(treeString.query(SpaceRegion(Point(-1, Array("a", "a", "a")), Point(-1, Array("p", "p", "p")))).size == 1)

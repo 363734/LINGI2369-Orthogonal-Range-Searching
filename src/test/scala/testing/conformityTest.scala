@@ -45,7 +45,7 @@ class conformityTest extends FlatSpec {
   // Making the different trees
   val kdTree = KdTree(points.toSet, 2)
   val rangeTree = RangeTree(points.toSet, 2)
-  val fractionalTree = FractionnalTree(points.toSet, 2)
+  val fractionalTree = FractionalTree(points.toSet, 2)
 
   val kdSearch = kdTree.searchKD(SpaceRegion(Point(-1, Array(1850, 0)), Point(-1, Array(1900, 500))))
   val rangeSearch = rangeTree.rangeQuery(SpaceRegion(Point(-1, Array(1850, 0)), Point(-1, Array(1900, 500))))

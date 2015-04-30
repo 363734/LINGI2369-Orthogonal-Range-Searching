@@ -25,13 +25,13 @@ abstract class FractionalCascading {
 /**
  * Abstract class defining the methods used for a rangeTree using fractional cascading for a non-terminal tree
  */
-abstract class FractionnalTree(val value: SpacePoint,
-                               val depth: Int) extends FractionalCascading {
+abstract class FractionalTree(val value: SpacePoint,
+                              val depth: Int) extends FractionalCascading {
 
   /**
    *  Returns the split node from the search
    */
-  def findSplitNode(region: SpaceRegion): FractionnalTree
+  def findSplitNode(region: SpaceRegion): FractionalTree
 
   def query(region: SpaceRegion): Set[SpacePoint] = {
     val splitNode = this.findSplitNode(region)
@@ -52,14 +52,14 @@ abstract class FractionnalTree(val value: SpacePoint,
 /**
  * Object that will be used to build the RangeTree with fractional cascading
  */
-object FractionnalTree {
+object FractionalTree {
   /**
    * Constructor of the RangeTree with fractional cascading
    * In : a set of Points and a dimension
    * Out : the corresponding rangeTree with fractional cascading
    */
   def apply(data: Set[SpacePoint], dim: Int): FractionalCascading = {
-    if (dim < 2) throw new Exception("Fractionnal Cascading don't work with dim < 2")
+    if (dim < 2) throw new Exception("Fractional Cascading don't work with dim < 2")
     val sortedPoints = List.tabulate(dim)(d => data.toArray.sortWith((p1, p2) => !p1.geqIndex(p2, d + 1)))
     this.buildFCTree(sortedPoints, 1, dim)
   }
@@ -71,9 +71,9 @@ object FractionnalTree {
    */
   def buildFCTree(sortedPoints: List[Array[SpacePoint]], depth: Int, dim: Int): FractionalCascading = {
     if (depth == dim - 1) {
-      FractionnalLastTree.buildFCLastTree(sortedPoints, depth, dim)
+      FractionalLastTree.buildFCLastTree(sortedPoints, depth, dim)
     } else {
-      FractionnalTree.buildFCTreeSameDepth(sortedPoints, depth, dim)
+      FractionalTree.buildFCTreeSameDepth(sortedPoints, depth, dim)
     }
   }
 
@@ -82,11 +82,11 @@ object FractionnalTree {
    * In : list of sorted points, a depth (dimension corresponding to the current rangeTree) and the total number of dimensions
    * Out : The fractional cascading structure corresponding
    */
-  def buildFCTreeSameDepth[A](sortedPoints: List[Array[SpacePoint]], depth: Int, dim: Int): FractionnalTree = {
+  def buildFCTreeSameDepth[A](sortedPoints: List[Array[SpacePoint]], depth: Int, dim: Int): FractionalTree = {
     if (sortedPoints(0).length == 1) {
-      FractionnalTreeLeaf(sortedPoints(0)(0), depth)
+      FractionalTreeLeaf(sortedPoints(0)(0), depth)
     } else {
-      val associatedTree = FractionnalTree.buildFCTree(sortedPoints.tail, depth + 1, dim)
+      val associatedTree = FractionalTree.buildFCTree(sortedPoints.tail, depth + 1, dim)
 
       val sublength = (sortedPoints(0).length - 1) / 2
       val pivot = sortedPoints(0)(sublength)
@@ -94,7 +94,7 @@ object FractionnalTree {
       val leftSortedPoints = sortedPoints.map(data => data.filter(d => !d.geqIndex(pivot, depth) || (d == pivot)))
       val rightSortedPoints = sortedPoints.map(data => data.filter(d => !(!d.geqIndex(pivot, depth) || (d == pivot))))
 
-      FractionnalTreeNode(pivot, associatedTree, FractionnalTree.buildFCTreeSameDepth(leftSortedPoints, depth, dim), FractionnalTree.buildFCTreeSameDepth(rightSortedPoints, depth, dim), depth)
+      FractionalTreeNode(pivot, associatedTree, FractionalTree.buildFCTreeSameDepth(leftSortedPoints, depth, dim), FractionalTree.buildFCTreeSameDepth(rightSortedPoints, depth, dim), depth)
     }
   }
 
@@ -103,13 +103,13 @@ object FractionnalTree {
 /**
  * Class representing an internal node of a rangeTree with fractional cascading
  */
-case class FractionnalTreeNode(valueNode: SpacePoint,
-                               val associatedTree: FractionalCascading,
-                               val left: FractionnalTree,
-                               val right: FractionnalTree,
-                               depthNode: Int) extends FractionnalTree(valueNode, depthNode) {
+case class FractionalTreeNode(valueNode: SpacePoint,
+                              val associatedTree: FractionalCascading,
+                              val left: FractionalTree,
+                              val right: FractionalTree,
+                              depthNode: Int) extends FractionalTree(valueNode, depthNode) {
 
-  def findSplitNode(region: SpaceRegion): FractionnalTree = {
+  def findSplitNode(region: SpaceRegion): FractionalTree = {
     if (region.contains(value, depth))
       this
     else {
@@ -141,9 +141,9 @@ case class FractionnalTreeNode(valueNode: SpacePoint,
     }
   }
 
-  def getLeftTree(): FractionnalTree = left
+  def getLeftTree(): FractionalTree = left
 
-  def getRightTree(): FractionnalTree = right
+  def getRightTree(): FractionalTree = right
 
   def getAssoTree(): FractionalCascading = associatedTree
 
@@ -155,10 +155,10 @@ case class FractionnalTreeNode(valueNode: SpacePoint,
 /**
  * Class representing a leaf node of a rangeTree with fractional cascading
  */
-case class FractionnalTreeLeaf(valueLeaf: SpacePoint,
-                               depthLeaf: Int) extends FractionnalTree(valueLeaf, depthLeaf) {
+case class FractionalTreeLeaf(valueLeaf: SpacePoint,
+                              depthLeaf: Int) extends FractionalTree(valueLeaf, depthLeaf) {
 
-  def findSplitNode(region: SpaceRegion): FractionnalTree = {
+  def findSplitNode(region: SpaceRegion): FractionalTree = {
     this
   }
 
@@ -180,9 +180,9 @@ case class FractionnalTreeLeaf(valueLeaf: SpacePoint,
     }
   }
 
-  def getLeftTree(): FractionnalTree = null
+  def getLeftTree(): FractionalTree = null
 
-  def getRightTree(): FractionnalTree = null
+  def getRightTree(): FractionalTree = null
 
   def getAssoTree(): FractionalCascading = null
 

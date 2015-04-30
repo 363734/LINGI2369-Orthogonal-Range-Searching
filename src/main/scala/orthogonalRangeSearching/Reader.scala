@@ -61,7 +61,7 @@ object Reader extends App {
 
     var kdTree = KdTree(points.toSet, 2)
     var rangeTree = RangeTree(points.toSet, 2)
-    var fractionalTree = FractionnalTree(points.toSet, 2)
+    var fractionalTree = FractionalTree(points.toSet, 2)
 
     println(kdTree.searchKD(SpaceRegion(Point(-1, Array(1850, 0)), Point(-1, Array(1900, 500)))))
     println(rangeTree.rangeQuery(SpaceRegion(Point(-1, Array(1850, 0)), Point(-1, Array(1900, 500)))))
@@ -72,7 +72,7 @@ object Reader extends App {
 
     kdTree = KdTree(point3D.toSet, 3)
     rangeTree = RangeTree(point3D.toSet, 3)
-    fractionalTree = FractionnalTree(point3D.toSet, 3)
+    fractionalTree = FractionalTree(point3D.toSet, 3)
 
     println(kdTree.searchKD(SpaceRegion(Point(-1, Array(1850, 0, 1)), Point(-1, Array(1900, 500, 10)))))
     println(rangeTree.rangeQuery(SpaceRegion(Point(-1, Array(1850, 0, 1)), Point(-1, Array(1900, 500, 10)))))
@@ -88,7 +88,7 @@ object Reader extends App {
 
     var kdTree = KdTree(points.toSet, 2)
     var rangeTree = RangeTree(points.toSet, 2)
-    var fractionalTree = FractionnalTree(points.toSet, 2)
+    var fractionalTree = FractionalTree(points.toSet, 2)
 
     println(kdTree.searchKD(SpaceRegion(Point(-1, Array("datapartc_july2000.csv", "mitsubishi")), Point(-1, Array("datapartc_july2000.csv", "mitsubishi")))))
     println(rangeTree.rangeQuery(SpaceRegion(Point(-1, Array("datapartc_july2000.csv", "mitsubishi")), Point(-1, Array("datapartc_july2000.csv", "mitsubishi")))))
@@ -131,7 +131,7 @@ object Reader extends App {
 
     time1 = System.currentTimeMillis
 
-    var fracTree = FractionnalTree(newPoints.toSet, 3)
+    var fracTree = FractionalTree(newPoints.toSet, 3)
     time2 = System.currentTimeMillis
     println("fract build : " + (time2 - time1))
     val fracSearch = fracTree.query(SpaceRegion(Town(-1, "", (40.0, 0.0)), Town(-1, "zzz", (55.0, 3.0))))
@@ -179,7 +179,7 @@ object Reader extends App {
 
     time1 = System.currentTimeMillis
 
-    var fracTree = FractionnalTree(newPoints.toSet, 2)
+    var fracTree = FractionalTree(newPoints.toSet, 2)
     time2 = System.currentTimeMillis
     println("frac build : " + (time2 - time1))
     val fracSearch = fracTree.query(SpaceRegion(Point(-1, Array(30.0, 1.0)), Point(-1, Array(60.0, 10.0))))
