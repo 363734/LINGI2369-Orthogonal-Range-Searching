@@ -3,7 +3,7 @@ package d1RangeSearchingTests
 import scala.io.Source
 import org.scalatest._
 import rangeTree._
-//import kdTrees._
+import kdTrees._
 import fractionalCascading._
 import space._
 
@@ -43,26 +43,26 @@ class conformityTest extends FlatSpec {
   val points = Data._2.zip(Data._3).map(x => Array(x._1, x._2)).zipWithIndex.map(x => Point(x._2, x._1))
 
   // Making the different trees
-  //  val kdTree = KdTree(points.toSet, 2)
+  val kdTree = KdTree(points.toSet, 2)
   val rangeTree = RangeTree(points.toSet, 2)
   val fractionalTree = FractionnalTree(points.toSet, 2)
 
-  //  val kdSearch = kdTree.searchKD(SpaceRegion(Array(Some(1850), Some(0)), Array(Some(1900), Some(500))))
+  val kdSearch = kdTree.searchKD(SpaceRegion(Point(-1, Array(1850, 0)), Point(-1, Array(1900, 500))))
   val rangeSearch = rangeTree.rangeQuery(SpaceRegion(Point(-1, Array(1850, 0)), Point(-1, Array(1900, 500))))
   val fractSearch = fractionalTree.query(SpaceRegion(Point(-1, Array(1850, 0)), Point(-1, Array(1900, 500))))
 
-  //  val kdList = kdSearch.toList
+  val kdList = kdSearch.toList
   val rangeList = rangeSearch.toList
   val fractList = fractSearch.toList
 
   "The size of results " should "be the same " in {
-    //    assert(rangeSearch.size == kdSearch.size)
+    assert(rangeSearch.size == kdSearch.size)
     assert(rangeSearch.size == fractSearch.size)
   }
 
   "The results " should "be the same " in {
     for (i <- 0 until rangeList.size) {
-      //      assert(kdList.contains(rangeList(i)))
+      assert(kdList.contains(rangeList(i)))
       assert(fractList.contains(rangeList(i)))
     }
 
