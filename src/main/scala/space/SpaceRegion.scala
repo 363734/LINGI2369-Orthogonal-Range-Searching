@@ -32,7 +32,7 @@ class SpaceRegion(val lb: SpacePoint, val ub: SpacePoint) {
   }
 
   def intersect(region: SpaceRegion): Boolean = {
-    (1 to dim).forall(d => region.contains(lb) || region.contains(ub))
+    (1 to dim).forall(d => region.contains(lb, d) || region.contains(ub, d))
   }
 
   def shrink(pivot: SpacePoint, dim: Int): (SpaceRegion, SpaceRegion) = {
