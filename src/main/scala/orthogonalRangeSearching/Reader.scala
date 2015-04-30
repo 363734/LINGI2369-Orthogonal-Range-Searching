@@ -1,4 +1,4 @@
-package OrthogonalRangeSearching
+package orthogonalRangeSearching
 
 import scala.io.Source
 import rangeTree._
