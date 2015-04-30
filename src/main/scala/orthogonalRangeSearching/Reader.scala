@@ -96,44 +96,104 @@ object Reader extends App {
 
   }
 
-  def cityData() = {
-    val Data = read("worldcitiespop_UTF.txt", 200000)
+  def cityData3D() = {
+    val Data = read("worldcitiespop_UTF.txt", 20000)
 
+    val names = Data._2(1).map { y => y }
     val lat = Data._2(5).map { y => y.toDouble }
     val long = Data._2(6).map { y => y.toDouble }
-    val points = lat.zip(long).map(x => Array(x._1, x._2)).zipWithIndex.map(x => Point(x._2, x._1))
 
-    var time = System.currentTimeMillis
+    val newPoints = names.zip(lat.zip(long)).zipWithIndex.map(x => Town(x._2, x._1._1, (x._1._2._1, x._1._2._2)))
 
-    var kdTree = KdTree(points.toSet, 2)
-    println(points(1))
-    println("kd build done")
-    val kdSearch = kdTree.searchKD(SpaceRegion(Point(-1, Array(40.0, 0.0)), Point(-1, Array(55.0, 3.0))))
+    var time1 = System.currentTimeMillis
+
+    var kdTree = KdTree(newPoints.toSet, 3)
+    var time2 = System.currentTimeMillis
+    println("kd build : " + (time2 - time1))
+    val kdSearch = kdTree.searchKD(SpaceRegion(Town(-1, "", (40.0, 0.0)), Town(-1, "zzz", (55.0, 3.0))))
+    var time3 = System.currentTimeMillis
+
     println("kd search size " + kdSearch.size)
+    println("kd querry : " + (time3 - time2))
+    println("Total : " + (time3 - time1))
 
-    println(System.currentTimeMillis - time)
+    time1 = System.currentTimeMillis
 
-    time = System.currentTimeMillis
+    var rangeTree = RangeTree(newPoints.toSet, 3)
+    time2 = System.currentTimeMillis
+    println("range build : " + (time2 - time1))
+    val rangeSearch = rangeTree.rangeQuery(SpaceRegion(Town(-1, "", (40.0, 0.0)), Town(-1, "zzz", (55.0, 3.0))))
+    time3 = System.currentTimeMillis
 
-    var rangeTree = RangeTree(points.toSet, 2)
-    println("range build done")
-    val rangeSearch = rangeTree.rangeQuery(SpaceRegion(Point(-1, Array(40.0, 0.0)), Point(-1, Array(55.0, 3.0))))
     println("range search size " + rangeSearch.size)
+    println("range querry : " + (time3 - time2))
+    println("Total : " + (time3 - time1))
 
-    println(System.currentTimeMillis - time)
+    time1 = System.currentTimeMillis
 
-    time = System.currentTimeMillis
+    var fracTree = FractionnalTree(newPoints.toSet, 3)
+    time2 = System.currentTimeMillis
+    println("fract build : " + (time2 - time1))
+    val fracSearch = fracTree.query(SpaceRegion(Town(-1, "", (40.0, 0.0)), Town(-1, "zzz", (55.0, 3.0))))
+    time3 = System.currentTimeMillis
 
-    var fractionalTree = FractionnalTree(points.toSet, 2)
-    println("frac build done")
-    val fracSearch = fractionalTree.query(SpaceRegion(Point(-1, Array(40.0, 0.0)), Point(-1, Array(55.0, 3.0))))
+    println("fract search size " + fracSearch.size)
+    println("fract results : " + fracSearch)
+    println("fract querry : " + (time3 - time2))
+    println("Total : " + (time3 - time1))
+
+  }
+
+  def cityData2D() = {
+    val Data = read("worldcitiespop_UTF.txt", 200000)
+
+    val names = Data._2(1).map { y => y }
+    val lat = Data._2(5).map { y => y.toDouble }
+    val long = Data._2(6).map { y => y.toDouble }
+
+    val newPoints = lat.zip(long).zipWithIndex.map(x => Point(x._2, Array(x._1._1, x._1._2)))
+
+    var time1 = System.currentTimeMillis
+
+    var kdTree = KdTree(newPoints.toSet, 2)
+    var time2 = System.currentTimeMillis
+    println("kd build : " + (time2 - time1))
+    val kdSearch = kdTree.searchKD(SpaceRegion(Point(-1, Array(30.0, 1.0)), Point(-1, Array(60.0, 10.0))))
+    var time3 = System.currentTimeMillis
+
+    println("kd search size " + kdSearch.size)
+    println("kd querry : " + (time3 - time2))
+    println("Total : " + (time3 - time1))
+
+    time1 = System.currentTimeMillis
+
+    var rangeTree = RangeTree(newPoints.toSet, 2)
+    time2 = System.currentTimeMillis
+    println("range build : " + (time2 - time1))
+    val rangeSearch = rangeTree.rangeQuery(SpaceRegion(Point(-1, Array(30.0, 1.0)), Point(-1, Array(60.0, 10.0))))
+    time3 = System.currentTimeMillis
+
+    println("range search size " + rangeSearch.size)
+    println("range querry : " + (time3 - time2))
+    println("Total : " + (time3 - time1))
+
+    time1 = System.currentTimeMillis
+
+    var fracTree = FractionnalTree(newPoints.toSet, 2)
+    time2 = System.currentTimeMillis
+    println("frac build : " + (time2 - time1))
+    val fracSearch = fracTree.query(SpaceRegion(Point(-1, Array(30.0, 1.0)), Point(-1, Array(60.0, 10.0))))
+    time3 = System.currentTimeMillis
+
     println("frac search size " + fracSearch.size)
-    println("range search size " + rangeSearch.size)
+    //    println("frac results : " + fracSearch)
+    println("frac querry : " + (time3 - time2))
+    println("Total : " + (time3 - time1))
 
-    println(System.currentTimeMillis - time)
   }
 
   //  smallData()
   //  bigData()
-  cityData()
+  //  cityData2D()
+  cityData3D()
 }

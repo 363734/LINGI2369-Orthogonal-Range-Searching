@@ -1,4 +1,4 @@
-package d1RangeSearchingTests
+package testing
 import org.scalatest._
 import space._
 import fractionalCascading._

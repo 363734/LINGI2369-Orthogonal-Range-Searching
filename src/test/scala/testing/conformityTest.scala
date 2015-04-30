@@ -1,4 +1,4 @@
-package d1RangeSearchingTests
+package testing
 
 import scala.io.Source
 import org.scalatest._
