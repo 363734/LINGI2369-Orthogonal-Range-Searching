@@ -32,7 +32,7 @@ class SpaceRegion(val lb: SpacePoint, val ub: SpacePoint) {
   }
 
   def intersect(region: SpaceRegion): Boolean = {
-    (1 to dim).forall(d => region.contains(lb, d) || region.contains(ub, d))
+    (1 to dim).forall(d => region.contains(lb, d) || region.contains(ub, d) || this.contains(region.lb, d) || this.contains(region.ub, d))
   }
 
   def shrink(pivot: SpacePoint, dim: Int): (SpaceRegion, SpaceRegion) = {
@@ -54,11 +54,11 @@ object SpaceRegion {
 object test extends App {
   implicit val boundInt = (Int.MinValue, Int.MaxValue)
   val p1 = Point(-1, Array(0, 0))
-  val p2 = Point(-1, Array(2, 2))
-  val p3 = Point(-1, Array(3, 3))
-  val p4 = Point(-1, Array(4, 4))
-  val s1 = SpaceRegion(p1, p3)
-  val s2 = SpaceRegion(p2, p4)
+  val p2 = Point(-1, Array(1000, 1000))
+  val p3 = Point(-1, Array(33, -1))
+  val p4 = Point(-1, Array(62, 59))
+  val s1 = SpaceRegion(p1, p2)
+  val s2 = SpaceRegion(p3, p4)
   println(s1.contains(s2) == false)
   println(s1.intersect(s2) == true)
   println(s2.intersect(s1) == true)
