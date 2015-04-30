@@ -9,14 +9,17 @@ class fractionalCascadingTests extends FlatSpec {
   // Points are : [3;5], [10;20], [19;70], [25;93], [33 :17], [41;63], [55,14], [62;59], [83;47], [91;73]
   val points = Array(3, 10, 19, 25, 33, 41, 55, 62, 83, 91).zip(Array(5, 20, 70, 93, 17, 63, 14, 59, 47, 73)).map(x => Array(x._1, x._2)).zipWithIndex.map(x => Point(x._2, x._1))
 
+  // Builds the tree of dimension 2 corresponding to the points
   val tree = FractionnalTree(points.toSet, 2)
-
+  // Get the subtrees
   val rightTree = tree.getRightTree()
   val leftTree = tree.getLeftTree()
   val rlTree = rightTree.getLeftTree()
+
   "The first dimention tree " should " be correctly build." in {
     assert(tree.getValue().asInstanceOf[Point[Int]].coord(1) == 33)
     assert(tree.getValue().asInstanceOf[Point[Int]].coord(2) == 17)
+
     assert(leftTree.getValue().asInstanceOf[Point[Int]].coord(1) == 19)
     assert(leftTree.getValue().asInstanceOf[Point[Int]].coord(2) == 70)
     assert(rightTree.getValue().asInstanceOf[Point[Int]].coord(1) == 62)
@@ -54,11 +57,15 @@ class fractionalCascadingTests extends FlatSpec {
 
     searchSet = tree.query(SpaceRegion(Point(-1, Array(55, 14)), Point(-1, Array(62, 58))))
     assert(searchSet.size == 1)
+  }
 
-    searchSet = tree.query(SpaceRegion(Point(-1, Array(0, 0)), Point(-1, Array(1000, 1000))))
+  "A search space containing all the points " should " report all the points" in {
+    val searchSet = tree.query(SpaceRegion(Point(-1, Array(0, 0)), Point(-1, Array(1000, 1000))))
     assert(searchSet.size == 10)
+  }
 
-    searchSet = tree.query(SpaceRegion(Point(-1, Array(0, 0)), Point(-1, Array(1, 1))))
+  "A search space out of the bounds of the points " should " report no point" in {
+    var searchSet = tree.query(SpaceRegion(Point(-1, Array(0, 0)), Point(-1, Array(1, 1))))
     assert(searchSet.size == 0)
 
     searchSet = tree.query(SpaceRegion(Point(-1, Array(1000, 500)), Point(-1, Array(1001, 5001))))
@@ -69,6 +76,19 @@ class fractionalCascadingTests extends FlatSpec {
     boundTest(40, 10, 70, 60)
     boundTest(10, 58, 23, 69)
     boundTest(0, 0, 10, 50)
+  }
+
+  /**
+   * Function testing that the search results are in the bounds of the search space for 2D Int points
+   */
+  def boundTest(lbx: Int, lby: Int, ubx: Int, uby: Int) = {
+    var searchSet = tree.query(SpaceRegion(Point(-1, Array(lbx, lby)), Point(-1, Array(ubx, uby))))
+
+    var searchPoints = searchSet.toList
+    for (i <- 0 until searchPoints.size) {
+      assert(searchPoints(i).asInstanceOf[Point[Int]].coord(1) <= ubx && searchPoints(i).asInstanceOf[Point[Int]].coord(2) <= uby)
+      assert(searchPoints(i).asInstanceOf[Point[Int]].coord(1) >= lbx && searchPoints(i).asInstanceOf[Point[Int]].coord(2) >= lby)
+    }
   }
 
   // Testing on Strings and 3D points
@@ -90,16 +110,9 @@ class fractionalCascadingTests extends FlatSpec {
     boundTest3DString("c", "c", "e", "q", "t", "e")
   }
 
-  def boundTest(lbx: Int, lby: Int, ubx: Int, uby: Int) = {
-    var searchSet = tree.query(SpaceRegion(Point(-1, Array(lbx, lby)), Point(-1, Array(ubx, uby))))
-
-    var searchPoints = searchSet.toList
-    for (i <- 0 until searchPoints.size) {
-      assert(searchPoints(i).asInstanceOf[Point[Int]].coord(1) <= ubx && searchPoints(i).asInstanceOf[Point[Int]].coord(2) <= uby)
-      assert(searchPoints(i).asInstanceOf[Point[Int]].coord(1) >= lbx && searchPoints(i).asInstanceOf[Point[Int]].coord(2) >= lby)
-    }
-  }
-
+  /**
+   * Function testing that the search results are in the bounds of the search space for 3D String points
+   */
   def boundTest3DString(lbx: String, lby: String, lbz: String, ubx: String, uby: String, ubz: String) = {
     var searchSet = treeString.query(SpaceRegion(Point(-1, Array(lbx, lby, lbz)), Point(-1, Array(ubx, uby, ubz))))
 

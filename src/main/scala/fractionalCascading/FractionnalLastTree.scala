@@ -3,6 +3,9 @@ package fractionalCascading
 import space._
 import scala.collection.mutable.Stack
 
+/**
+ * Class that will be used to handle the fractional cascading structure itself
+ */
 case class ArrayPoints(val arrayPoints: Array[SpacePoint]) {
   val arrayLeft: Array[Int] = Array.fill(arrayPoints.length)(-1)
   val arrayRight: Array[Int] = Array.fill(arrayPoints.length)(-1)
@@ -11,6 +14,9 @@ case class ArrayPoints(val arrayPoints: Array[SpacePoint]) {
 
   override def toString: String = arrayPoints.mkString(" -> ")
 
+  /**
+   * Seperates the SpaceRegion into two sub-regions according to the fractional cascading rules
+   */
   def split(pivot: SpacePoint, leftNumber: Int): (ArrayPoints, ArrayPoints) = {
     var leftIndex = leftNumber
     val leftArray: Array[SpacePoint] = new Array(leftIndex)
@@ -33,6 +39,9 @@ case class ArrayPoints(val arrayPoints: Array[SpacePoint]) {
     (ArrayPoints(leftArray), ArrayPoints(rightArray))
   }
 
+  /**
+   * Performs a binary search on the space region and returns the index of the first and last points in it
+   */
   def binarySearch(region: SpaceRegion): (Int, Int) = {
     val dim = arrayPoints(0).dim
 
@@ -42,6 +51,9 @@ case class ArrayPoints(val arrayPoints: Array[SpacePoint]) {
     (first, last)
   }
 
+  /**
+   * Performs a binary search on the fractional cascading structure with the points and the given bounds
+   */
   def binarySearch(bound: SpacePoint, from: Int, to: Int): Int = {
     if (from == to) {
       from
@@ -56,10 +68,16 @@ case class ArrayPoints(val arrayPoints: Array[SpacePoint]) {
     }
   }
 
+  /**
+   * Report a whole part of the fractional cascading structure
+   */
   def reportSlice(from: Int, until: Int): Set[SpacePoint] = {
     arrayPoints.slice(from, until).toSet
   }
 
+  /**
+   * Report a single point of the fractional cascading structure
+   */
   def reportSinglePoint(index: Int, region: SpaceRegion): Set[SpacePoint] = {
     if (index < arrayPoints.length && region.contains(arrayPoints(index))) {
       Set(arrayPoints(index))
@@ -68,6 +86,9 @@ case class ArrayPoints(val arrayPoints: Array[SpacePoint]) {
     }
   }
 
+  /**
+   * Go trough the fractional cascading structure to find the left most point to return
+   */
   def deepLeft(index: Int) = {
     if (index >= arrayPoints.length)
       arrayPoints.length
@@ -75,6 +96,9 @@ case class ArrayPoints(val arrayPoints: Array[SpacePoint]) {
       arrayLeft(index)
   }
 
+  /**
+   * Go trough the fractional cascading structure to find the right most point to return
+   */
   def deepRight(index: Int) = {
     if (index >= arrayPoints.length)
       arrayPoints.length
@@ -83,18 +107,71 @@ case class ArrayPoints(val arrayPoints: Array[SpacePoint]) {
   }
 }
 
+/**
+ * Abstract class defining the methods used for a rangeTree using fractional cascading for a terminal tree
+ */
+abstract class FractionnalLastTree(val value: SpacePoint,
+                                   val depth: Int) extends FractionalCascading {
+
+  /**
+   *  Returns the split node from the search
+   */
+  def query(region: SpaceRegion): Set[SpacePoint] = {
+    val splitNode = this.findSplitNode(region)
+    splitNode.queryFromSplitNode(region)
+  }
+
+  /**
+   *  Returns the split node from the search
+   */
+  def findSplitNode(region: SpaceRegion): FractionnalLastTree
+
+  /**
+   * Group of functions the query on this node :
+   * d1RangeQueryFromSplitNode : on the current Node
+   * d1RangeQueryFromSplitNodeLeft : on a left childNode
+   * d1RangeQueryFromSplitNodeRight : on a right childNode
+   */
+  def queryFromSplitNode(region: SpaceRegion): Set[SpacePoint]
+  def queryFromSplitNodeLeft(region: SpaceRegion, low: Int, up: Int): Set[SpacePoint]
+  def queryFromSplitNodeRight(region: SpaceRegion, low: Int, up: Int): Set[SpacePoint]
+
+  /**
+   * Report all the points in the subtree of the node
+   */
+  def reportSubtree(region: SpaceRegion, low: Int, up: Int): Set[SpacePoint]
+}
+
+/**
+ * Object that will be used to build the fractional cascading structure for the last dimension
+ */
 object FractionnalLastTree {
+  /**
+   * Constructor of the fractional cascading structure for the last dimension
+   * In : a set of Points and a dimension
+   * Out : the corresponding fractional cascading structure for the last dimension
+   */
   def apply(data: Set[SpacePoint], dim: Int): FractionnalLastTree = {
     if (dim != 2) throw new Exception("FractionnalLastTree can only be constructed with d=2")
     val sortedPoints = List.tabulate(dim)(d => data.toArray.sortWith((p1, p2) => !p1.geqIndex(p2, d + 1)))
     this.buildFCLastTree(sortedPoints, 1, dim)
   }
 
+  /**
+   * Method used to build the fractional cascading structure for the last dimension
+   * In : list of sorted points, a depth (dimension corresponding to the current rangeTree) and the total number of dimensions
+   * Out : The fractional cascading structure for the last dimension
+   */
   def buildFCLastTree[A](sortedPoints: List[Array[SpacePoint]], depth: Int, dim: Int): FractionnalLastTree = {
     val initialArrayNode = ArrayPoints(sortedPoints.last)
     this.buildFCLastTree(sortedPoints, initialArrayNode, depth, dim)
   }
 
+  /**
+   * Method used to build a fractional cascading structure
+   * In : list of sorted points, a depth (dimension corresponding to the current rangeTree) and the total number of dimensions
+   * Out : The fractional cascading structure corresponding
+   */
   def buildFCLastTree[A](sortedPoints: List[Array[SpacePoint]], arrayNode: ArrayPoints, depth: Int, dim: Int): FractionnalLastTree = {
     if (sortedPoints(0).length == 1) {
       FractionnalLastTreeLeaf(sortedPoints(0)(0), depth)
@@ -111,28 +188,14 @@ object FractionnalLastTree {
   }
 }
 
-abstract class FractionnalLastTree(val value: SpacePoint,
-  val depth: Int) extends FractionalCascading {
-
-  def query(region: SpaceRegion): Set[SpacePoint] = {
-    val splitNode = this.findSplitNode(region)
-    splitNode.queryFromSplitNode(region)
-  }
-
-  def findSplitNode(region: SpaceRegion): FractionnalLastTree
-
-  def queryFromSplitNode(region: SpaceRegion): Set[SpacePoint]
-  def queryFromSplitNodeLeft(region: SpaceRegion, low: Int, up: Int): Set[SpacePoint]
-  def queryFromSplitNodeRight(region: SpaceRegion, low: Int, up: Int): Set[SpacePoint]
-
-  def reportSubtree(region: SpaceRegion, low: Int, up: Int): Set[SpacePoint]
-}
-
+/**
+ * Class representing an internal node of a rangeTree with fractional cascading at the last depth
+ */
 case class FractionnalLastTreeNode(valueNode: SpacePoint,
-  val array: ArrayPoints,
-  val left: FractionnalLastTree,
-  val right: FractionnalLastTree,
-  depthNode: Int) extends FractionnalLastTree(valueNode, depthNode) {
+                                   val array: ArrayPoints,
+                                   val left: FractionnalLastTree,
+                                   val right: FractionnalLastTree,
+                                   depthNode: Int) extends FractionnalLastTree(valueNode, depthNode) {
 
   def findSplitNode(region: SpaceRegion): FractionnalLastTree = {
     if (region.contains(value, depth)) {
@@ -185,7 +248,7 @@ case class FractionnalLastTreeNode(valueNode: SpacePoint,
 }
 
 case class FractionnalLastTreeLeaf(valueLeaf: SpacePoint,
-  depthLeaf: Int) extends FractionnalLastTree(valueLeaf, depthLeaf) {
+                                   depthLeaf: Int) extends FractionnalLastTree(valueLeaf, depthLeaf) {
 
   def findSplitNode(region: SpaceRegion): FractionnalLastTree = {
     this
@@ -223,6 +286,9 @@ case class FractionnalLastTreeLeaf(valueLeaf: SpacePoint,
   def getDepth(): Int = depth
 }
 
+/**
+ * Obsolete object used for some tests
+ */
 object test extends App {
   implicit val boundInt = (Int.MinValue, Int.MaxValue)
   val points = Array(1, 4, 5, 6, 8, 1, 5, 9, 3, 7).zip(Array(5, 6, 8, 9, 1, 2, 3, 5, 4, 3)).map(x => Array(x._1, x._2)).zipWithIndex.map(x => Point(x._2, x._1))
